@@ -10,7 +10,7 @@
 
 %% API
 -export([load_nif/0, load_nif/1, decode/1, decode/2, start/0, stop/0,
-         decode_file/1, decode_file/2]).
+         decode_from_file/1, decode_from_file/2]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -48,14 +48,14 @@ load_nif(LibDir) ->
 decode(Data) ->
     decode(Data, []).
 
--spec decode_file(string()) -> {ok, term()} | {error, binary()}.
+-spec decode_from_file(string()) -> {ok, term()} | {error, binary()}.
 
-decode_file(File) ->
-    decode_file(File, []).
+decode_from_file(File) ->
+    decode_from_file(File, []).
 
--spec decode_file(string(), options()) -> {ok, term()} | {error, binary()}.
+-spec decode_from_file(string(), options()) -> {ok, term()} | {error, binary()}.
 
-decode_file(File, Opts) ->
+decode_from_file(File, Opts) ->
     case file:read_file(File) of
         {ok, Data} ->
             decode(Data, Opts);
@@ -108,7 +108,7 @@ nif_decode(_Data, _Flags) ->
 load_nif_test() ->
     ?assertEqual(ok, load_nif(filename:join(["..", "priv", "lib"]))).
 
-decode_file1_test() ->
+decode_test1_test() ->
     FileName = filename:join(["..", "test", "test1.yml"]),
     ?assertEqual(
        {ok,[[{<<"Time">>,<<"2001-11-23 15:01:42 -5">>},
@@ -128,7 +128,7 @@ decode_file1_test() ->
                [{<<"file">>,<<"MoreClass.py">>},
                 {<<"line">>,58},
                 {<<"code">>,<<"foo = bar">>}]]}]]},
-       decode_file(FileName)).
+       decode_from_file(FileName)).
 
 decode_test2_test() ->
     FileName = filename:join(["..", "test", "test2.yml"]),
@@ -147,7 +147,7 @@ decode_test2_test() ->
              [{step,<<"id002">>}],
              [{step,<<"id001">>}],
              [{step,<<"id002">>}]]]},
-       decode_file(FileName, [plain_as_atom])).
+       decode_from_file(FileName, [plain_as_atom])).
 
 decode_test3_test() ->
     FileName = filename:join(["..", "test", "test3.yml"]),
@@ -160,7 +160,7 @@ decode_test3_test() ->
              {<<"f">>,<<"Yes">>},
              {<<"g">>,<<"Yes">>},
              {<<"h">>,<<"Yes we have No bananas">>}]]},
-       decode_file(FileName)).
+       decode_from_file(FileName)).
 
 decode_test4_test() ->
     FileName = filename:join(["..", "test", "test4.yml"]),
@@ -168,6 +168,6 @@ decode_test4_test() ->
        {ok,[[{<<"picture">>,
               <<"R0lGODlhDAAMAIQAAP//9/X\n17unp5WZmZgAAAOfn515eXv\n"
                 "Pz7Y6OjuDg4J+fn5OTk6enp\n56enmleECcgggoBADs=mZmE\n">>}]]},
-       decode_file(FileName)).
+       decode_from_file(FileName)).
 
 -endif.

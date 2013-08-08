@@ -38,7 +38,7 @@ static ERL_NIF_TERM make_binary(ErlNifEnv* env, const unsigned char *str)
     return make_binary_size(env, str, size);
 }
 
-static int make_int(ErlNifEnv* env, const unsigned char *value,
+static int make_num(ErlNifEnv* env, const unsigned char *value,
 		    size_t size, long int *i, double *d)
 {
     int ret = 0;
@@ -80,7 +80,7 @@ static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags)
     } else if (style == YAML_DOUBLE_QUOTED_SCALAR_STYLE) {
 	rterm = make_binary_size(env, event->data.scalar.value,
 				 event->data.scalar.length);
-    } else if ((type = make_int(env, event->data.scalar.value, 
+    } else if ((type = make_num(env, event->data.scalar.value, 
 				event->data.scalar.length, &i, &d))) {
 	if (type == INTEGER)
 	    rterm = enif_make_long(env, i);
