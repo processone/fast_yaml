@@ -10,11 +10,7 @@
 
 %% API
 -export([load_nif/0, load_nif/1, decode/1, decode/2, start/0, stop/0,
-         decode_from_file/1, decode_from_file/2]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
+         decode_from_file/1, decode_from_file/2, encode/1]).
 
 -type option() :: {plain_as_atom, boolean()}.
 -type options() :: [option()].
@@ -68,6 +64,29 @@ decode_from_file(File, Opts) ->
 decode(Data, Opts) ->
     nif_decode(Data, make_flags(Opts)).
 
+-spec encode(term()) -> iolist().
+
+encode(Term) ->
+    encode(Term, 0).
+
+encode([{_, _}|_] = Terms, N) ->
+    [[io_lib:nl(), indent(N), encode_pair(T, N)] || T <- Terms];
+encode([_|_] = Terms, N) ->
+    [[io_lib:nl(), indent(N), "- ", encode(T, N+2)] || T <- Terms];
+encode([], _) ->
+    "{}";
+encode(I, _) when is_integer(I) ->
+    integer_to_list(I);
+encode(F, _) when is_float(F) ->
+    io_lib:format("~f", [F]);
+encode(A, _) when is_atom(A) ->
+    atom_to_list(A);
+encode(B, _) when is_binary(B) ->
+    io_lib:write_string(binary_to_list(B)).
+
+encode_pair({K, V}, N) ->
+    [encode(K), ": ", encode(V, N+2)].
+
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
@@ -100,10 +119,14 @@ nif_decode(_Data, _Flags) ->
     error_logger:error_msg("p1_yaml NIF not loaded", []),
     erlang:nif_error(nif_not_loaded).
 
+indent(N) ->
+    lists:duplicate(N, $ ).
+
 %%%===================================================================
 %%% Unit tests
 %%%===================================================================
 -ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
 
 load_nif_test() ->
     ?assertEqual(ok, load_nif(filename:join(["..", "priv", "lib"]))).
