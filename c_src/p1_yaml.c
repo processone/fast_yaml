@@ -1,33 +1,26 @@
 #include <yaml.h>
 #include <erl_nif.h>
+#include <stdlib.h>
 
 #define OK 0
 #define ERR_MEMORY_FAIL 1
 #define PLAIN_AS_ATOM 1
+#define INTEGER 1
+#define FLOAT 2
+
+typedef struct events_t {
+    yaml_event_t *event;
+    struct events_t *prev;
+} events_t;
 
 static int load(ErlNifEnv* env, void** priv, ERL_NIF_TERM load_info)
 {
     return 0;
 }
 
-static ERL_NIF_TERM make_mark(ErlNifEnv* env, yaml_mark_t *mark)
-{
-    return enif_make_tuple4(env,
-			    enif_make_atom(env, "mark"),
-			    enif_make_uint(env, (unsigned int) mark->index),
-			    enif_make_uint(env, (unsigned int) mark->line),
-			    enif_make_uint(env, (unsigned int) mark->column));
-}
-
-static ERL_NIF_TERM make_bool(ErlNifEnv* env, int flag)
-{
-    if (flag)
-	return enif_make_atom(env, "true");
-    else
-	return enif_make_atom(env, "false");
-}
-
-static ERL_NIF_TERM make_binary_size(ErlNifEnv* env, const unsigned char *str, size_t size)
+static ERL_NIF_TERM make_binary_size(ErlNifEnv* env,
+				     const unsigned char *str,
+				     size_t size)
 {
     ErlNifBinary b;
     enif_alloc_binary(size, &b);
@@ -45,266 +38,232 @@ static ERL_NIF_TERM make_binary(ErlNifEnv* env, const unsigned char *str)
     return make_binary_size(env, str, size);
 }
 
-static ERL_NIF_TERM make_document_start(ErlNifEnv* env, yaml_event_t *event)
+static int make_int(ErlNifEnv* env, const unsigned char *value,
+		    size_t size, long int *i, double *d)
 {
-    /* TODO: make tag directives */
+    int ret = 0;
 
-    ERL_NIF_TERM version_directive;
-    if (event->data.document_start.version_directive) {
-	int major = event->data.document_start.version_directive->major;
-	int minor = event->data.document_start.version_directive->minor;
-	version_directive = enif_make_tuple2(env,
-					     enif_make_uint(env, major),
-					     enif_make_uint(env, minor));
+    if (size>0) {
+	char *buf = enif_alloc(size + 1);
+	if (buf) {
+	    memcpy(buf, value, size);
+	    buf[size] = '\0';
+	    char *check;
+	    *i = strtol(buf, &check, 10);
+	    if (*check == '\0')
+		ret = INTEGER;
+	    else if (*check == '.') {
+		*d = strtod(buf, &check);
+		if (*check == '\0')
+		    ret = FLOAT;
+	    }
+	    enif_free(buf);
+	}
+    }
+
+    return ret;
+}
+
+static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags)
+{
+    int as_atom = PLAIN_AS_ATOM & flags;
+    long int i;
+    double d;
+    int type;
+    yaml_scalar_style_t style = event->data.scalar.style;
+    ERL_NIF_TERM rterm;
+
+    if (as_atom && style == YAML_SINGLE_QUOTED_SCALAR_STYLE) {
+	rterm =  enif_make_atom_len(env,
+				    (char *) event->data.scalar.value,
+				    event->data.scalar.length);
+    } else if (style == YAML_DOUBLE_QUOTED_SCALAR_STYLE) {
+	rterm = make_binary_size(env, event->data.scalar.value,
+				 event->data.scalar.length);
+    } else if ((type = make_int(env, event->data.scalar.value, 
+				event->data.scalar.length, &i, &d))) {
+	if (type == INTEGER)
+	    rterm = enif_make_long(env, i);
+	else
+	    rterm = enif_make_double(env, d);
+    } else if (as_atom && style == YAML_PLAIN_SCALAR_STYLE) {
+	rterm = enif_make_atom_len(env,
+				   (char *) event->data.scalar.value,
+				   event->data.scalar.length);
     } else {
-	version_directive = enif_make_atom(env, "undefined");
+	rterm = make_binary_size(env, event->data.scalar.value,
+				 event->data.scalar.length);
     }
 
-    return enif_make_tuple5(env,
-			    enif_make_atom(env, "document_start"),
-			    make_mark(env, &event->start_mark),
-			    make_mark(env, &event->end_mark),
-			    version_directive,
-			    make_bool(env, event->data.document_start.implicit));
-}
-
-static ERL_NIF_TERM make_document_end(ErlNifEnv* env, yaml_event_t *event)
-{
-    return enif_make_tuple4(env,
-			    enif_make_atom(env, "document_end"),
-			    make_mark(env, &event->start_mark),
-			    make_mark(env, &event->end_mark),
-			    make_bool(env, event->data.document_end.implicit));
-}
-
-static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event)
-{
-    ERL_NIF_TERM style;
-    switch (event->data.scalar.style) {
-    case YAML_ANY_SCALAR_STYLE:
-	style = enif_make_atom(env, "any");
-	break;
-    case YAML_PLAIN_SCALAR_STYLE:
-	style = enif_make_atom(env, "plain");
-	break;
-    case YAML_SINGLE_QUOTED_SCALAR_STYLE:
-	style = enif_make_atom(env, "single_quoted");
-	break;
-    case YAML_DOUBLE_QUOTED_SCALAR_STYLE:
-	style = enif_make_atom(env, "double_quoted");
-	break;
-    case YAML_LITERAL_SCALAR_STYLE:
-	style = enif_make_atom(env, "literal");
-	break;
-    case YAML_FOLDED_SCALAR_STYLE:
-	style = enif_make_atom(env, "folded");
-	break;
-    default:
-	style = enif_make_atom(env, "undefined");
-	break;
-    }
-    
-    return enif_make_tuple9(env,
-			    enif_make_atom(env, "scalar"),
-			    make_mark(env, &event->start_mark),
-			    make_mark(env, &event->end_mark),
-			    style,
-			    make_binary(env, event->data.scalar.anchor),
-			    make_binary(env, event->data.scalar.tag),
-			    make_binary_size(env, event->data.scalar.value,
-					     event->data.scalar.length),
-			    make_bool(env, event->data.scalar.plain_implicit),
-			    make_bool(env, event->data.scalar.quoted_implicit));
+    return rterm;
 }
 
 static ERL_NIF_TERM make_alias(ErlNifEnv* env, yaml_event_t *event)
 {
-    return enif_make_tuple4(env,
-			    enif_make_atom(env, "alias"),
-			    make_mark(env, &event->start_mark),
-			    make_mark(env, &event->end_mark),
-			    make_binary(env, event->data.scalar.anchor));
+    return make_binary(env, event->data.alias.anchor);
 }
 
-static ERL_NIF_TERM make_stream_start(ErlNifEnv* env, yaml_event_t *event)
+static ERL_NIF_TERM zip(ErlNifEnv* env, ERL_NIF_TERM list)
 {
-    ERL_NIF_TERM encoding;
+    ERL_NIF_TERM key, val, tmp1, tmp2;
 
-    switch (event->data.stream_start.encoding) {
-    case YAML_ANY_ENCODING:
-	encoding = enif_make_atom(env, "any");
-	break;
-    case YAML_UTF8_ENCODING:
-	encoding = enif_make_atom(env, "utf8");
-	break;
-    case YAML_UTF16LE_ENCODING:
-	encoding = enif_make_atom(env, "utf16-le");
-	break;
-    case YAML_UTF16BE_ENCODING:
-	encoding = enif_make_atom(env, "utf16-be");
-	break;
-    default:
-	encoding = enif_make_atom(env, "undefined");
-	break;
-    }
-    
-    return enif_make_tuple4(env,
-			    enif_make_atom(env, "stream_start"),
-			    make_mark(env, &event->start_mark),
-			    make_mark(env, &event->end_mark),
-			    encoding);
-}
-
-static ERL_NIF_TERM make_stream_end(ErlNifEnv* env, yaml_event_t *event)
-{
-    return enif_make_tuple3(env,
-			    enif_make_atom(env, "stream_end"),
-			    make_mark(env, &event->start_mark),
-			    make_mark(env, &event->end_mark));
-}
-
-static ERL_NIF_TERM make_mapping_end(ErlNifEnv* env, yaml_event_t *event)
-{
-    return enif_make_tuple3(env,
-			    enif_make_atom(env, "mapping_end"),
-			    make_mark(env, &event->start_mark),
-			    make_mark(env, &event->end_mark));
-}
-
-static ERL_NIF_TERM make_sequence_end(ErlNifEnv* env, yaml_event_t *event)
-{
-    return enif_make_tuple3(env,
-			    enif_make_atom(env, "sequence_end"),
-			    make_mark(env, &event->start_mark),
-			    make_mark(env, &event->end_mark));
-}
-
-static ERL_NIF_TERM make_sequence_start(ErlNifEnv* env, yaml_event_t *event)
-{
-    ERL_NIF_TERM style;
-    switch (event->data.sequence_start.style) {
-    case YAML_ANY_SEQUENCE_STYLE:
-	style = enif_make_atom(env, "any");
-	break;
-    case YAML_BLOCK_SEQUENCE_STYLE:
-	style = enif_make_atom(env, "block");
-	break;
-    case YAML_FLOW_SEQUENCE_STYLE:
-	style = enif_make_atom(env, "flow");
-	break;
-    default:
-	style = enif_make_atom(env, "undefined");
-	break;
-    }
-
-    return enif_make_tuple7(env,
-			    enif_make_atom(env, "sequence_start"),
-			    make_mark(env, &event->start_mark),
-			    make_mark(env, &event->end_mark),
-			    style,
-			    make_binary(env, event->data.sequence_start.anchor),
-			    make_binary(env, event->data.sequence_start.tag),
-			    make_bool(env, event->data.sequence_start.implicit));
-}
-
-static ERL_NIF_TERM make_mapping_start(ErlNifEnv* env, yaml_event_t *event)
-{
-    ERL_NIF_TERM style;
-    switch (event->data.mapping_start.style) {
-    case YAML_ANY_MAPPING_STYLE:
-	style = enif_make_atom(env, "any");
-	break;
-    case YAML_BLOCK_MAPPING_STYLE:
-	style = enif_make_atom(env, "block");
-	break;
-    case YAML_FLOW_MAPPING_STYLE:
-	style = enif_make_atom(env, "flow");
-	break;
-    default:
-	style = enif_make_atom(env, "undefined");
-	break;
-    }
-
-    return enif_make_tuple7(env,
-			    enif_make_atom(env, "mapping_start"),
-			    make_mark(env, &event->start_mark),
-			    make_mark(env, &event->end_mark),
-			    style,
-			    make_binary(env, event->data.mapping_start.anchor),
-			    make_binary(env, event->data.mapping_start.tag),
-			    make_bool(env, event->data.mapping_start.implicit));
+    if (enif_get_list_cell(env, list, &key, &tmp1)) {
+	if (enif_get_list_cell(env, tmp1, &val, &tmp2)) {
+	    return enif_make_list_cell(env,
+				       enif_make_tuple2(env, key, val),
+				       zip(env, tmp2));
+	} else {
+	    return enif_make_list_cell(env, key, enif_make_list(env, 0));
+	}
+    } else
+	return list;
 }
 
 static ERL_NIF_TERM make_error(ErlNifEnv* env, yaml_parser_t *parser)
 {
-    return enif_make_tuple3(env,
-			    enif_make_atom(env, "stream_error"),
-			    make_mark(env, &parser->problem_mark),
-			    make_binary(env, (unsigned char*) parser->problem));
+    ERL_NIF_TERM err;
+
+    switch (parser->error) {
+    case YAML_MEMORY_ERROR:
+	err = enif_make_atom(env, "memory_error");
+	break;
+    case YAML_PARSER_ERROR:
+	err = enif_make_tuple4(env,
+			       enif_make_atom(env, "parser_error"),
+			       make_binary(env, (const unsigned char*) parser->problem),
+			       enif_make_uint(env, parser->problem_mark.line),
+			       enif_make_uint(env, parser->problem_mark.column));
+	break;
+    case YAML_SCANNER_ERROR:
+	err = enif_make_tuple4(env,
+			       enif_make_atom(env, "scanner_error"),
+			       make_binary(env, (const unsigned char*) parser->problem),
+			       enif_make_uint(env, parser->problem_mark.line),
+			       enif_make_uint(env, parser->problem_mark.column));
+	break;
+    default:
+	err = enif_make_atom(env, "unexpected_error");
+	break;
+    }
+
+    return enif_make_tuple2(env, enif_make_atom(env, "error"), err);
+}
+
+static yaml_event_t *hd(events_t **events)
+{
+    yaml_event_t *event = NULL;
+    events_t *tmp;
+
+    if (*events) {
+	event = (*events)->event;
+	tmp = *events;
+	*events = (*events)->prev;
+	enif_free(tmp);
+    }
+
+    return event;
+}
+
+static void free_events(events_t **events)
+{
+    yaml_event_t *event = NULL;
+
+    if (events) {
+	while (*events) {
+	    event = hd(events);
+	    if (event) {
+		yaml_event_delete(event);
+		enif_free(event);
+	    }
+	}
+    }
+}
+
+static ERL_NIF_TERM process_events(ErlNifEnv* env, events_t **events,
+				   yaml_parser_t *parser, int flags)
+{
+    ERL_NIF_TERM els, el;
+    yaml_event_t *event;
+    els = enif_make_list(env, 0);
+
+    if (events) {
+	while (*events) {
+	    event = hd(events);
+	    if (event) {
+		switch (event->type) {
+		case YAML_SEQUENCE_END_EVENT:
+		    el = process_events(env, events, parser, flags);
+		    els = enif_make_list_cell(env, el, els);
+		    break;
+		case YAML_MAPPING_END_EVENT:
+		    el = process_events(env, events, parser, flags);
+		    els = enif_make_list_cell(env, el, els);
+		    break;
+		case YAML_MAPPING_START_EVENT:
+		    yaml_event_delete(event);
+		    enif_free(event);
+		    return zip(env, els);
+		case YAML_SEQUENCE_START_EVENT:
+		    yaml_event_delete(event);
+		    enif_free(event);
+		    return els;
+		case YAML_SCALAR_EVENT:
+		    el = make_scalar(env, event, flags);
+		    els = enif_make_list_cell(env, el, els);
+		    break;
+		case YAML_ALIAS_EVENT:
+		    el = make_alias(env, event);
+		    els = enif_make_list_cell(env, el, els);
+		    break;
+		default:
+		    break;
+		}
+		yaml_event_delete(event);
+		enif_free(event);
+	    } else {
+		break;
+	    }
+	}
+    }
+
+    return els;
 }
 
 static ERL_NIF_TERM parse(ErlNifEnv* env, yaml_parser_t *parser,
-			  unsigned char *data, int size)
+			  int flags, unsigned char *data, int size)
 {
-    yaml_event_t event;
-    ERL_NIF_TERM term, tail;
-    int done;
-
-    tail = enif_make_list(env, 0);
+    int result = 0, done = 0;
+    yaml_event_t *event = NULL;
+    events_t *prev_events = NULL;
+    events_t *events = NULL;
+    ERL_NIF_TERM rterm;
 
     yaml_parser_set_input_string(parser, data, size);
 
     do {
-	if (yaml_parser_parse(parser, &event)) {
-	    switch (event.type) {
-	    case YAML_STREAM_START_EVENT:
-		term = make_stream_start(env, &event);
-		break;
-	    case YAML_STREAM_END_EVENT:
-		term = make_stream_end(env, &event);
-		break;
-	    case YAML_DOCUMENT_START_EVENT:
-		term = make_document_start(env, &event);
-		break;
-	    case YAML_DOCUMENT_END_EVENT:
-		term = make_document_end(env, &event);
-		break;
-	    case YAML_ALIAS_EVENT:
-		term = make_alias(env, &event);
-		break;
-	    case YAML_SCALAR_EVENT:
-		term = make_scalar(env, &event);
-		break;
-	    case YAML_SEQUENCE_START_EVENT:
-		term = make_sequence_start(env, &event);
-		break;
-	    case YAML_SEQUENCE_END_EVENT:
-		term = make_sequence_end(env, &event);
-		break;
-	    case YAML_MAPPING_START_EVENT:
-		term = make_mapping_start(env, &event);
-		break;
-	    case YAML_MAPPING_END_EVENT:
-		term = make_mapping_end(env, &event);
-		break;
-	    default:
-		term = enif_make_atom(env, "unknown_event");
-		break;
-	    };
-
-	    tail = enif_make_list_cell(env, term, tail);
-	    
-	    done = (event.type == YAML_STREAM_END_EVENT);
-
-	    yaml_event_delete(&event);
+	event = enif_alloc(sizeof(yaml_event_t));
+	result = yaml_parser_parse(parser, event);
+	if (result) {
+	    prev_events = events;
+	    events = enif_alloc(sizeof(events_t *));
+	    events->event = event;
+	    events->prev = prev_events;
+	    done = (event->type == YAML_STREAM_END_EVENT);
 	} else {
-	    term = make_error(env, parser);
-	    tail = enif_make_list_cell(env, term, tail);
+	    enif_free(event);
 	    done = 1;
 	}
     } while (!done);
-
-    return tail;
+    
+    if (result) {
+	rterm = enif_make_tuple2(env, enif_make_atom(env, "ok"),
+				 process_events(env, &events, parser, flags));
+    } else {
+	rterm = make_error(env, parser);
+    }
+    
+    free_events(&events);
+    return rterm;
 }
 
 static ERL_NIF_TERM decode(ErlNifEnv* env, int argc,
@@ -320,7 +279,7 @@ static ERL_NIF_TERM decode(ErlNifEnv* env, int argc,
 	    enif_get_uint(env, argv[1], &flags))
 	    {
 		yaml_parser_initialize(&parser);
-		result = parse(env, &parser, input.data, input.size);
+		result = parse(env, &parser, flags, input.data, input.size);
 		yaml_parser_delete(&parser);
 		return result;
 	    }

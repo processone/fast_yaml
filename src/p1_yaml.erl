@@ -21,70 +21,6 @@
 
 -define(PLAIN_AS_ATOM, 1).
 
--record(mark, {index = 0  :: non_neg_integer(),
-               line = 0   :: non_neg_integer(),
-               column = 0 :: non_neg_integer()}).
-
--type mark() :: #mark{}.
-
--record(document_start, {start_mark = #mark{} :: mark(),
-                         end_mark = #mark{}   :: mark(),
-                         version_directive    :: {integer(), integer()},
-                         implicit = true      :: boolean()}).
-
--record(document_end, {start_mark = #mark{} :: mark(),
-                       end_mark = #mark{}   :: mark(),
-                       implicit = true      :: boolean()}).
-
--type scalar_style() :: plain | single_quoted |
-                        double_quoted | literal |
-                        folded.
-
--type encoding() :: utf8 | 'utf16-le' | 'utf16-be'.
-
--record(scalar, {start_mark = #mark{}    :: mark(),
-                 end_mark = #mark{}      :: mark(),
-                 style = plain           :: scalar_style(),
-                 anchor = <<>>           :: binary(),
-                 tag = <<>>              :: binary(),
-                 value = <<>>            :: binary() | atom(),
-                 plain_implicit = true   :: boolean(),
-                 quoted_implicit = false :: boolean()}).
-
--record(alias, {start_mark = #mark{} :: mark(),
-                end_mark = #mark{}   :: mark(),
-                anchor = <<>>        :: binary()}).
-
--record(stream_start, {start_mark = #mark{} :: mark(),
-                       end_mark = #mark{}   :: mark(),
-                       encoding = utf8      :: encoding()}).
-
--record(stream_end, {start_mark = #mark{} :: mark(),
-                     end_mark = #mark{}   :: mark()}).
-
--record(mapping_end, {start_mark = #mark{} :: mark(),
-                      end_mark = #mark{}   :: mark()}).
-
--record(sequence_end, {start_mark = #mark{} :: mark(),
-                       end_mark = #mark{}   :: mark()}).
-
--record(sequence_start, {start_mark = #mark{} :: mark(),
-                         end_mark = #mark{}   :: mark(),
-                         style = block        :: block | flow,
-                         anchor = <<>>        :: binary(),
-                         tag = <<>>           :: binary(),
-                         implicit = true      :: boolean()}).
-
--record(mapping_start, {start_mark = #mark{} :: mark(),
-                        end_mark = #mark{}   :: mark(),
-                        style = block        :: block | flow,
-                        anchor = <<>>        :: binary(),
-                        tag = <<>>           :: binary(),
-                        implicit = true      :: boolean()}).
-
--record(stream_error, {mark = #mark{} :: mark(),
-                       reason = <<>>  :: binary()}).
-
 %%%===================================================================
 %%% API
 %%%===================================================================
@@ -130,50 +66,11 @@ decode_file(File, Opts) ->
 -spec decode(iodata(), options()) -> {ok, term()} | {error, binary()}.
 
 decode(Data, Opts) ->
-    case nif_decode(Data, make_flags(Opts)) of
-        [#stream_error{reason = Reason}|_] ->
-            {error, Reason};
-        Events ->
-            case process_events(Events, []) of
-                [] -> {ok, []};
-                [Root] -> {ok, Root}
-            end
-    end.
+    nif_decode(Data, make_flags(Opts)).
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-process_events([#stream_end{}|Events], Terms) ->
-    process_events(Events, Terms);
-process_events([#stream_start{}], Terms) ->
-    Terms;
-process_events([#document_end{}|Events], Terms) ->
-    process_events(Events, Terms);
-process_events([#document_start{}|Events], Terms) ->
-    process_events(Events, Terms);
-
-process_events([#mapping_end{}|Events], Terms) ->
-    {Elems, NewEvents} = process_events(Events, []),
-    process_events(NewEvents, [Elems|Terms]);
-process_events([#mapping_start{}|Events], Elems) ->
-    {zip(Elems), Events};
-
-process_events([#sequence_end{}|Events], Terms) ->
-    {Elems, NewEvents} = process_events(Events, []),
-    process_events(NewEvents, [Elems|Terms]);
-process_events([#sequence_start{}|Events], Elems) ->
-    {Elems, Events};
-
-process_events([#scalar{value = V}|Events], Terms) ->
-    process_events(Events, [V|Terms]);
-process_events([#alias{anchor = V}|Events], Terms) ->
-    process_events(Events, [V|Terms]).
-
-zip([E1,E2|Es]) ->
-    [{E1,E2}|zip(Es)];
-zip([]) ->
-    [].
-
 get_so_path() ->
     case os:getenv("EJABBERD_SO_PATH") of
         false ->
@@ -210,5 +107,67 @@ nif_decode(_Data, _Flags) ->
 
 load_nif_test() ->
     ?assertEqual(ok, load_nif(filename:join(["..", "priv", "lib"]))).
+
+decode_file1_test() ->
+    FileName = filename:join(["..", "test", "test1.yml"]),
+    ?assertEqual(
+       {ok,[[{<<"Time">>,<<"2001-11-23 15:01:42 -5">>},
+             {<<"User">>,<<"ed">>},
+             {<<"Warning">>,
+              <<"This is an error message for the log file">>}],
+            [{<<"Time">>,<<"2001-11-23 15:02:31 -5">>},
+             {<<"User">>,<<"ed">>},
+             {<<"Warning">>,<<"A slightly different error message.">>}],
+            [{<<"Date">>,<<"2001-11-23 15:03:17 -5">>},
+             {<<"User">>,<<"ed">>},
+             {<<"Fatal">>,<<"Unknown variable \"bar\"">>},
+             {<<"Stack">>,
+              [[{<<"file">>,<<"TopClass.py">>},
+                {<<"line">>,23},
+                {<<"code">>,<<"x = MoreObject(\"345\\n\")\n">>}],
+               [{<<"file">>,<<"MoreClass.py">>},
+                {<<"line">>,58},
+                {<<"code">>,<<"foo = bar">>}]]}]]},
+       decode_file(FileName)).
+
+decode_test2_test() ->
+    FileName = filename:join(["..", "test", "test2.yml"]),
+    ?assertEqual(
+       {ok,[[[{step,[{instrument,<<"Lasik 2000">>},
+                     {pulseEnergy,5.4},
+                     {pulseDuration,12},
+                     {repetition,1000},
+                     {spotSize,<<"1mm">>}]}],
+             [{step,[{instrument,<<"Lasik 2000">>},
+                     {pulseEnergy,5.0},
+                     {pulseDuration,10},
+                     {repetition,500},
+                     {spotSize,<<"2mm">>}]}],
+             [{step,<<"id001">>}],
+             [{step,<<"id002">>}],
+             [{step,<<"id001">>}],
+             [{step,<<"id002">>}]]]},
+       decode_file(FileName, [plain_as_atom])).
+
+decode_test3_test() ->
+    FileName = filename:join(["..", "test", "test3.yml"]),
+    ?assertEqual(
+       {ok,[[{<<"a">>,123},
+             {<<"b">>,<<"123">>},
+             {<<"c">>,123.0},
+             {<<"d">>,123},
+             {<<"e">>,123},
+             {<<"f">>,<<"Yes">>},
+             {<<"g">>,<<"Yes">>},
+             {<<"h">>,<<"Yes we have No bananas">>}]]},
+       decode_file(FileName)).
+
+decode_test4_test() ->
+    FileName = filename:join(["..", "test", "test4.yml"]),
+    ?assertEqual(
+       {ok,[[{<<"picture">>,
+              <<"R0lGODlhDAAMAIQAAP//9/X\n17unp5WZmZgAAAOfn515eXv\n"
+                "Pz7Y6OjuDg4J+fn5OTk6enp\n56enmleECcgggoBADs=mZmE\n">>}]]},
+       decode_file(FileName)).
 
 -endif.

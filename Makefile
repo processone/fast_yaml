@@ -9,4 +9,4 @@ clean:
 test:
 	rebar skip_deps=true eunit
 
-.PHONY: clean src
+.PHONY: clean src all test
