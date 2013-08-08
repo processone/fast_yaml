@@ -28,7 +28,12 @@ AC_ERLANG_NEED_ERLC
 # AC_ERLANG_SUBST_ROOT_DIR
 # AC_ERLANG_SUBST_LIB_DIR
 
+AC_CHECK_LIB(yaml, yaml_parser_initialize, [YAML_LIB=yes], [], [])
 AC_CHECK_HEADER(yaml.h, [YAML_HEADER=yes], [], [])
+
+if test "x$YAML_LIB" = "x"; then
+   AC_MSG_ERROR([libyaml library was not found])
+fi
 
 if test "x$YAML_HEADER" = "x"; then
    AC_MSG_ERROR([libyaml header file "yaml.h" was not found])
