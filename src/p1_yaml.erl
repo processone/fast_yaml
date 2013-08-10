@@ -82,7 +82,12 @@ encode(F, _) when is_float(F) ->
 encode(A, _) when is_atom(A) ->
     atom_to_list(A);
 encode(B, _) when is_binary(B) ->
-    io_lib:write_string(binary_to_list(B)).
+    [$",
+     lists:map(
+       fun($") -> [$\\, $"];
+          (C) -> C
+       end, binary_to_list(B)),
+     $"].
 
 encode_pair({K, V}, N) ->
     [encode(K), ": ", encode(V, N+2)].
