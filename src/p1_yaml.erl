@@ -67,7 +67,13 @@ decode(Data, Opts) ->
 -spec encode(term()) -> iolist().
 
 encode(Term) ->
-    encode(Term, 0).
+    NL = io_lib:nl(),
+    case encode(Term, 0) of
+        [[NL|T1]|T2] ->
+            [T1|T2];
+        T ->
+            T
+    end.
 
 encode([{_, _}|_] = Terms, N) ->
     [[io_lib:nl(), indent(N), encode_pair(T, N)] || T <- Terms];
