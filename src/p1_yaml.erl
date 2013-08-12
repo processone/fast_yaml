@@ -80,7 +80,7 @@ encode([{_, _}|_] = Terms, N) ->
 encode([_|_] = Terms, N) ->
     [[io_lib:nl(), indent(N), "- ", encode(T, N+2)] || T <- Terms];
 encode([], _) ->
-    "{}";
+    "[]";
 encode(I, _) when is_integer(I) ->
     integer_to_list(I);
 encode(F, _) when is_float(F) ->
