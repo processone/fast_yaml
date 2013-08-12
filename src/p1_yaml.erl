@@ -10,7 +10,7 @@
 
 %% API
 -export([load_nif/0, load_nif/1, decode/1, decode/2, start/0, stop/0,
-         decode_from_file/1, decode_from_file/2, encode/1]).
+         decode_from_file/1, decode_from_file/2, encode/1, format_error/1]).
 
 -type option() :: {plain_as_atom, boolean()}.
 -type options() :: [option()].
@@ -38,6 +38,24 @@ load_nif(LibDir) ->
             error_logger:warning_msg("unable to load p1_yaml NIF: ~p~n", [Err]),
             Err
     end.
+
+-spec format_error(atom() |
+                   {parser_error | scanner_error,
+                    binary(),
+                    non_neg_integer(), non_neg_integer()}) -> string().
+
+format_error({Tag, Reason, Line, Column}) when Tag == parser_error;
+                                               Tag == scanner_error ->
+    lists:flatten(
+      io_lib:format(
+        "Syntax error on line ~p at position ~p: ~s",
+        [Line+1, Column+1, Reason]));
+format_error(memory_error) ->
+    "Memory error";
+format_error("unexpected_error") ->
+    "Unexpected error";
+format_error(Reason) ->
+    file:format_error(Reason).
 
 -spec decode(iodata()) -> {ok, term()} | {error, binary()}.
 
