@@ -52,7 +52,7 @@ format_error({Tag, Reason, Line, Column}) when Tag == parser_error;
         [Line+1, Column+1, Reason]));
 format_error(memory_error) ->
     "Memory error";
-format_error("unexpected_error") ->
+format_error(unexpected_error) ->
     "Unexpected error";
 format_error(Reason) ->
     file:format_error(Reason).
