@@ -14,6 +14,10 @@
 
 -type option() :: {plain_as_atom, boolean()} | plain_as_atom.
 -type options() :: [option()].
+-type parser_error() :: {parser_error, binary(), integer(), integer()}.
+-type scanner_error() :: {scanner_error, binary(), integer(), integer()}.
+-type yaml_error() :: parser_error() | scanner_error() |
+                      memory_error | unexpected_error.
 
 -define(PLAIN_AS_ATOM, 1).
 
@@ -39,10 +43,7 @@ load_nif(LibDir) ->
             Err
     end.
 
--spec format_error(atom() |
-                   {parser_error | scanner_error,
-                    binary(),
-                    non_neg_integer(), non_neg_integer()}) -> string().
+-spec format_error(atom() | yaml_error()) -> string().
 
 format_error({Tag, Reason, Line, Column}) when Tag == parser_error;
                                                Tag == scanner_error ->
@@ -52,22 +53,20 @@ format_error({Tag, Reason, Line, Column}) when Tag == parser_error;
         [Line+1, Column+1, Reason]));
 format_error(memory_error) ->
     "Memory error";
-format_error(unexpected_error) ->
-    "Unexpected error";
-format_error(Reason) ->
-    file:format_error(Reason).
+format_error(_) ->
+    "Unexpected error".
 
--spec decode(iodata()) -> {ok, term()} | {error, binary()}.
+-spec decode(iodata()) -> {ok, term()} | {error, yaml_error()}.
 
 decode(Data) ->
     decode(Data, []).
 
--spec decode_from_file(file:filename()) -> {ok, term()} | {error, binary()}.
+-spec decode_from_file(file:filename()) -> {ok, term()} | {error, yaml_error()}.
 
 decode_from_file(File) ->
     decode_from_file(File, []).
 
--spec decode_from_file(file:filename(), options()) -> {ok, term()} | {error, binary()}.
+-spec decode_from_file(file:filename(), options()) -> {ok, term()} | {error, yaml_error()}.
 
 decode_from_file(File, Opts) ->
     case file:read_file(File) of
@@ -77,7 +76,7 @@ decode_from_file(File, Opts) ->
             Err
     end.
 
--spec decode(iodata(), options()) -> {ok, term()} | {error, binary()}.
+-spec decode(iodata(), options()) -> {ok, term()} | {error, yaml_error()}.
 
 decode(Data, Opts) ->
     nif_decode(Data, make_flags(Opts)).
