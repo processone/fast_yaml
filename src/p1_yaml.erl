@@ -12,7 +12,7 @@
 -export([load_nif/0, load_nif/1, decode/1, decode/2, start/0, stop/0,
          decode_from_file/1, decode_from_file/2, encode/1, format_error/1]).
 
--type option() :: {plain_as_atom, boolean()}.
+-type option() :: {plain_as_atom, boolean()} | plain_as_atom.
 -type options() :: [option()].
 
 -define(PLAIN_AS_ATOM, 1).
