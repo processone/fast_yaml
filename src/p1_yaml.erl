@@ -62,12 +62,12 @@ format_error(Reason) ->
 decode(Data) ->
     decode(Data, []).
 
--spec decode_from_file(string()) -> {ok, term()} | {error, binary()}.
+-spec decode_from_file(file:filename()) -> {ok, term()} | {error, binary()}.
 
 decode_from_file(File) ->
     decode_from_file(File, []).
 
--spec decode_from_file(string(), options()) -> {ok, term()} | {error, binary()}.
+-spec decode_from_file(file:filename(), options()) -> {ok, term()} | {error, binary()}.
 
 decode_from_file(File, Opts) ->
     case file:read_file(File) of
