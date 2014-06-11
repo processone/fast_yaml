@@ -53,6 +53,8 @@ format_error({Tag, Reason, Line, Column}) when Tag == parser_error;
         [Line+1, Column+1, Reason]));
 format_error(memory_error) ->
     "Memory error";
+format_error(Reason) when is_atom(Reason) ->
+    file:format_error(Reason);
 format_error(_) ->
     "Unexpected error".
 
