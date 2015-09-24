@@ -1,0 +1,11 @@
+sudo: false
+
+language: erlang
+
+install:
+  - rebar get-deps
+
+otp_release:
+  - 17.1
+  - 17.5
+  - 18.0
