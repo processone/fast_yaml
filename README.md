@@ -4,8 +4,8 @@ P1 YAML is an Erlang wrapper for [libyaml](http://pyyaml.org/wiki/LibYAML) "C" l
 
 ## Installation
 
-> $ ./configure
-> $ make
+    $ ./configure
+    $ make
 
 ## Example usage
 
