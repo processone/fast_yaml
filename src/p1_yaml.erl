@@ -139,9 +139,15 @@ encode_pair({K, V}, N) ->
 %%% Internal functions
 %%%===================================================================
 get_so_path() ->
-    EbinDir = filename:dirname(code:which(?MODULE)),
-    AppDir = filename:dirname(EbinDir),
-    filename:join([AppDir, "priv", "lib"]).
+    PrivDir = case code:priv_dir(p1_yaml) of
+                  {error, _} ->
+                      EbinDir = filename:dirname(code:which(?MODULE)),
+                      AppDir = filename:dirname(EbinDir),
+                      filename:join([AppDir, "priv"]);
+                  V ->
+                      V
+              end,
+    filename:join([PrivDir, "lib"]).
 
 make_flags([{plain_as_atom, true}|Opts]) ->
     ?PLAIN_AS_ATOM bor make_flags(Opts);
@@ -169,7 +175,7 @@ indent(N) ->
 -include_lib("eunit/include/eunit.hrl").
 
 load_nif_test() ->
-    ?assertEqual(ok, load_nif(filename:join(["..", "priv", "lib"]))).
+    ?assertEqual(ok, load_nif()).
 
 decode_test1_test() ->
     FileName = filename:join(["..", "test", "test1.yml"]),
