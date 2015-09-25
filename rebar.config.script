@@ -1,0 +1,22 @@
+Cfg = case file:consult("vars.config") of
+          {ok, Terms} ->
+              Terms;
+          _Err ->
+              []
+      end ++ [{cflags, "-g -O2 -Wall"}, {ldflags, "-lyaml"}],
+{cflags, CfgCFlags} = lists:keyfind(cflags, 1, Cfg),
+{ldflags, CfgLDFlags} = lists:keyfind(ldflags, 1, Cfg),
+
+Config = [
+    {erl_opts, [debug_info]},
+
+    {port_env, [{"CFLAGS", "$CFLAGS " ++ CfgCFlags},
+	        {"LDFLAGS", "$LDFLAGS " ++ CfgLDFlags}]},
+
+    {port_specs, [{"priv/lib/p1_yaml.so", ["c_src/p1_yaml.c"]}]}
+].
+
+%% Local Variables:
+%% mode: erlang
+%% End:
+%% vim: set filetype=erlang tabstop=8:
