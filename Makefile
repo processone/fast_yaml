@@ -6,7 +6,7 @@ src:
 clean:
 	rebar clean
 
-test:
+test: all
 	rebar skip_deps=true eunit
 
 .PHONY: clean src all test
