@@ -27,7 +27,7 @@
 -module(p1_yaml).
 
 %% API
--export([load_nif/0, load_nif/1, decode/1, decode/2, start/0, stop/0,
+-export([load_nif/0, decode/1, decode/2, start/0, stop/0,
          decode_from_file/1, decode_from_file/2, encode/1, format_error/1]).
 
 -type option() :: {plain_as_atom, boolean()} | plain_as_atom.
@@ -49,10 +49,7 @@ stop() ->
     application:stop(p1_yaml).
 
 load_nif() ->
-    load_nif(get_so_path()).
-
-load_nif(LibDir) ->
-    SOPath = filename:join(LibDir, "p1_yaml"),
+    SOPath = p1_nif_utils:get_so_path(?MODULE, [p1_yaml], "p1_yaml"),
     case catch erlang:load_nif(SOPath, 0) of
         ok ->
             ok;
@@ -138,16 +135,6 @@ encode_pair({K, V}, N) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-get_so_path() ->
-    PrivDir = case code:priv_dir(p1_yaml) of
-                  {error, _} ->
-                      EbinDir = filename:dirname(code:which(?MODULE)),
-                      AppDir = filename:dirname(EbinDir),
-                      filename:join([AppDir, "priv"]);
-                  V ->
-                      V
-              end,
-    filename:join([PrivDir, "lib"]).
 
 make_flags([{plain_as_atom, true}|Opts]) ->
     ?PLAIN_AS_ATOM bor make_flags(Opts);
