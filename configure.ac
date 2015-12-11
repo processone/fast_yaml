@@ -34,5 +34,15 @@ AC_CHECK_HEADERS([yaml.h], [], [
 AC_SEARCH_LIBS([yaml_parser_initialize], [yaml], [], [
     AC_MSG_ERROR([libyaml library was not found])])
 
+AC_ARG_ENABLE(gcov,
+[AC_HELP_STRING([--enable-gcov], [compile with gcov enabled (default: no)])],
+[case "${enableval}" in
+  yes) gcov=true ;;
+  no)  gcov=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-gcov) ;;
+esac],[gcov=false])
+
+AC_SUBST(gcov)
+
 AC_CONFIG_FILES([vars.config])
 AC_OUTPUT
