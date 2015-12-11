@@ -27,7 +27,13 @@
   {modules,      []},
   {registered,   []},
   {applications, [kernel, stdlib]},
-  {mod,          {fast_yaml_app,[]}}]}.
+  {mod,          {fast_yaml_app,[]}},
+
+  %% hex.pm packaging:
+  {files, ["src/", "c_src/fast_yaml.c", "include/", "rebar.config", "rebar.config.script", "README.md", "LICENSE.txt"]},
+  {licenses, ["Apache 2.0"]},
+  {maintainers, ["ProcessOne"]},
+  {links, [{"Github", "https://github.com/processone/fast_yaml"}]}]}.
 
 %% Local Variables:
 %% mode: erlang
