@@ -1,8 +1,8 @@
 %%%----------------------------------------------------------------------
-%%% File    : p1_yaml_app.erl
+%%% File    : fast_yaml.app.src
 %%% Author  : Evgeniy Khramtsov <ekhramtsov@process-one.net>
-%%% Purpose : YAML parser application
-%%% Created : 7 Aug 2013 by Evgeniy Khramtsov <ekhramtsov@process-one.net>
+%%% Purpose : Application package description
+%%% Created : 4 Apr 2013 by Evgeniy Khramtsov <ekhramtsov@process-one.net>
 %%%
 %%%
 %%% Copyright (C) 2002-2015 ProcessOne, SARL. All Rights Reserved.
@@ -21,27 +21,15 @@
 %%%
 %%%----------------------------------------------------------------------
 
--module(p1_yaml_app).
+{application, fast_yaml,
+ [{description,  "Fast YAML native library for Erlang / Elixir"},
+  {vsn,          "1.0.0"},
+  {modules,      []},
+  {registered,   []},
+  {applications, [kernel, stdlib]},
+  {mod,          {fast_yaml_app,[]}}]}.
 
--behaviour(application).
-
-%% Application callbacks
--export([start/2, stop/1]).
-
-%%%===================================================================
-%%% Application callbacks
-%%%===================================================================
-start(_StartType, _StartArgs) ->
-    case p1_yaml:load_nif() of
-        ok ->
-            p1_yaml_sup:start_link();
-        Err ->
-            Err
-    end.
-
-stop(_State) ->
-    ok.
-
-%%%===================================================================
-%%% Internal functions
-%%%===================================================================
+%% Local Variables:
+%% mode: erlang
+%% End:
+%% vim: set filetype=erlang tabstop=8:

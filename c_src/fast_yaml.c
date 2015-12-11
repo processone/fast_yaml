@@ -310,4 +310,4 @@ static ErlNifFunc nif_funcs[] =
 	{"nif_decode", 2, decode}
     };
 
-ERL_NIF_INIT(p1_yaml, nif_funcs, load, NULL, NULL, NULL)
+ERL_NIF_INIT(fast_yaml, nif_funcs, load, NULL, NULL, NULL)

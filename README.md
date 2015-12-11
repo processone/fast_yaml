@@ -1,29 +1,60 @@
-# P1 YAML [![Build Status](https://travis-ci.org/processone/p1_yaml.svg?branch=master)](https://travis-ci.org/processone/p1_yaml)
+# Fast YAML
 
-P1 YAML is an Erlang wrapper for [libyaml](http://pyyaml.org/wiki/LibYAML) "C" library.
+[![Build Status](https://travis-ci.org/processone/fast_yaml.svg?branch=master)](https://travis-ci.org/processone/fast_yaml)
+
+Fast YAML is an Erlang wrapper for [libyaml](http://pyyaml.org/wiki/LibYAML) "C" library.
+
+It is design to be fast and efficient.
 
 ## Installation
 
-    $ ./configure
-    $ make
+### Dependencies
+
+Fast YAML depends on native LibYaml library. You need development
+headers for LibYaml library to build it.
+
+### Generic build
+
+You can trigger build with:
+
+    ./configure && make
+
+### OSX build example
+
+You can install LibYaml and with Homebrew:
+
+    brew install libyaml
+
+You can then export environment variable to use LibYaml as installed
+by Homebrew, before issuing compilation commands:
+
+    export LDFLAGS="-L/usr/local/lib"
+    export CFLAGS="-I/usr/local/include"
+
+    ./configure && make
 
 ## Example usage
 
 ```erlang
-1> application:start(p1_yaml).
+$ erl -pa ebin -pa deps/*/ebin
+Erlang/OTP 18 [erts-7.1] [source] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
+
+Eshell V7.1  (abort with ^G)
+
+1> application:start(fast_yaml).
 ok
 
-2> p1_yaml:decode(<<"a: 1\nb: -3.0">>).
+2> fast_yaml:decode(<<"a: 1\nb: -3.0">>).
 {ok,[[{<<"a">>,1},{<<"b">>,-3.0}]]}
 
-3> p1_yaml:decode(<<"a: 1\nb: -3.0">>, [{plain_as_atom, true}]).
+3> fast_yaml:decode(<<"a: 1\nb: -3.0">>, [{plain_as_atom, true}]).
 {ok,[[{a,1},{b,-3.0}]]}
 
-4> p1_yaml:decode(<<"a: b\nc">>).  
+4> fast_yaml:decode(<<"a: b\nc">>).
 {error,{scanner_error,<<"could not find expected ':'">>,2,
                       0}}.
 
-5> p1_yaml:decode_from_file("test/test2.yml", [plain_as_atom]).
+5> fast_yaml:decode_from_file("test/test2.yml", [plain_as_atom]).
 {ok,[[[{step,[{instrument,<<"Lasik 2000">>},
               {pulseEnergy,5.4},
               {pulseDuration,12},
@@ -39,3 +70,13 @@ ok
       [{step,<<"id001">>}],
       [{step,<<"id002">>}]]]}
 ```
+
+## Development
+
+### Test
+
+#### Unit test
+
+You can run eunit test with the command:
+
+    make test

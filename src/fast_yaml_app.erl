@@ -1,8 +1,8 @@
 %%%----------------------------------------------------------------------
-%%% File    : fast_yaml.app.src
+%%% File    : fast_yaml_app.erl
 %%% Author  : Evgeniy Khramtsov <ekhramtsov@process-one.net>
-%%% Purpose : Application package description
-%%% Created : 4 Apr 2013 by Evgeniy Khramtsov <ekhramtsov@process-one.net>
+%%% Purpose : YAML parser application
+%%% Created : 7 Aug 2013 by Evgeniy Khramtsov <ekhramtsov@process-one.net>
 %%%
 %%%
 %%% Copyright (C) 2002-2015 ProcessOne, SARL. All Rights Reserved.
@@ -21,15 +21,27 @@
 %%%
 %%%----------------------------------------------------------------------
 
-{application, p1_yaml,
- [{description,  "libyaml wrapper"},
-  {vsn,          "0.1.0"},
-  {modules,      []},
-  {registered,   []},
-  {applications, [kernel, stdlib]},
-  {mod,          {p1_yaml_app,[]}}]}.
+-module(fast_yaml_app).
 
-%% Local Variables:
-%% mode: erlang
-%% End:
-%% vim: set filetype=erlang tabstop=8:
+-behaviour(application).
+
+%% Application callbacks
+-export([start/2, stop/1]).
+
+%%%===================================================================
+%%% Application callbacks
+%%%===================================================================
+start(_StartType, _StartArgs) ->
+    case fast_yaml:load_nif() of
+        ok ->
+            fast_yaml_sup:start_link();
+        Err ->
+            Err
+    end.
+
+stop(_State) ->
+    ok.
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================

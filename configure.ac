@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.53)
-AC_PACKAGE_VERSION(0.1.0)
-AC_INIT(p1_yaml, 0.1.0, [], [])
+AC_PACKAGE_VERSION(1.0.0)
+AC_INIT(fast_yaml, 1.0.0, [], [])
 
 # Checks for programs.
 AC_PROG_CC

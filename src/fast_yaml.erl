@@ -1,5 +1,5 @@
 %%%----------------------------------------------------------------------
-%%% File    : p1_yaml.erl
+%%% File    : fast_yaml.erl
 %%% Author  : Evgeniy Khramtsov <ekhramtsov@process-one.net>
 %%% Purpose : YAML parser
 %%% Created : 7 Aug 2013 by Evgeniy Khramtsov <ekhramtsov@process-one.net>
@@ -21,7 +21,7 @@
 %%%
 %%%----------------------------------------------------------------------
 
--module(p1_yaml).
+-module(fast_yaml).
 
 %% API
 -export([load_nif/0, decode/1, decode/2, start/0, stop/0,
@@ -40,18 +40,18 @@
 %%% API
 %%%===================================================================
 start() ->
-    application:start(p1_yaml).
+    application:start(fast_yaml).
 
 stop() ->
-    application:stop(p1_yaml).
+    application:stop(fast_yaml).
 
 load_nif() ->
-    SOPath = p1_nif_utils:get_so_path(?MODULE, [p1_yaml], "p1_yaml"),
+    SOPath = p1_nif_utils:get_so_path(?MODULE, [fast_yaml], "fast_yaml"),
     case catch erlang:load_nif(SOPath, 0) of
         ok ->
             ok;
         Err ->
-            error_logger:warning_msg("unable to load p1_yaml NIF: ~p~n", [Err]),
+            error_logger:warning_msg("unable to load fast_yaml NIF: ~p~n", [Err]),
             Err
     end.
 
@@ -140,13 +140,13 @@ make_flags([{plain_as_atom, false}|Opts]) ->
 make_flags([plain_as_atom|Opts]) ->
     ?PLAIN_AS_ATOM bor make_flags(Opts);
 make_flags([Opt|Opts]) ->
-    error_logger:warning_msg("p1_yaml: unknown option ~p", [Opt]),
+    error_logger:warning_msg("fast_yaml: unknown option ~p", [Opt]),
     make_flags(Opts);
 make_flags([]) ->
     0.
 
 nif_decode(_Data, _Flags) ->
-    error_logger:error_msg("p1_yaml NIF not loaded", []),
+    error_logger:error_msg("fast_yaml NIF not loaded", []),
     erlang:nif_error(nif_not_loaded).
 
 indent(N) ->

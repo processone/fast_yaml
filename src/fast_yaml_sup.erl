@@ -1,5 +1,5 @@
 %%%----------------------------------------------------------------------
-%%% File    : p1_yaml_sup.erl
+%%% File    : fast_yaml_sup.erl
 %%% Author  : Evgeniy Khramtsov <ekhramtsov@process-one.net>
 %%% Purpose : YAML parser supervisor
 %%% Created : 7 Aug 2013 by Evgeniy Khramtsov <ekhramtsov@process-one.net>
@@ -21,7 +21,7 @@
 %%%
 %%%----------------------------------------------------------------------
 
--module(p1_yaml_sup).
+-module(fast_yaml_sup).
 
 -behaviour(supervisor).
 
