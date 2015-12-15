@@ -5,7 +5,7 @@
 Fast YAML is an Erlang wrapper for
 [libyaml](http://pyyaml.org/wiki/LibYAML) "C" library.
 
-It is design to be fast and efficient.
+It is designed to be fast and efficient.
 
 ## Installation
 
