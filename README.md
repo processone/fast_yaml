@@ -31,6 +31,7 @@ by Homebrew, before issuing compilation commands:
 
     export LDFLAGS="-L/usr/local/lib"
     export CFLAGS="-I/usr/local/include"
+    export CPPFLAGS="-I/usr/local/include"
 
     ./configure && make
 
