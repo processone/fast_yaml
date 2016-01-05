@@ -1,3 +1,7 @@
+# Version 1.0.1
+
+* Update to depend on p1_utils 1.0.3 (Mickaël Rémond)
+
 # Version 1.0.0
 
 * Initial release on Hex.pm (Mickaël Rémond)
