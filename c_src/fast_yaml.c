@@ -103,7 +103,7 @@ static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags)
 	    rterm = enif_make_long(env, i);
 	else
 	    rterm = enif_make_double(env, d);
-    } else if (as_atom && style == YAML_PLAIN_SCALAR_STYLE) {
+    } else if (as_atom && style == YAML_PLAIN_SCALAR_STYLE && event->data.scalar.length) {
 	rterm = enif_make_atom_len(env,
 				   (char *) event->data.scalar.value,
 				   event->data.scalar.length);
