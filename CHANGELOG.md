@@ -1,3 +1,12 @@
+# Version 1.0.3
+
+* Improve error message on syntax error (Evgeny Khramtsov)
+  We previously had error {unknown_macro, ''}
+
+# Version 1.0.2
+
+* Release with proper dependency on hex.pm (Mickaël Rémond)
+
 # Version 1.0.1
 
 * Update to depend on p1_utils 1.0.3 (Mickaël Rémond)
