@@ -1,3 +1,7 @@
+# Version 1.0.4
+
+* Update to p1_utils 1.0.4 (Mickaël Rémond)
+
 # Version 1.0.3
 
 * Improve error message on syntax error (Evgeny Khramtsov)
