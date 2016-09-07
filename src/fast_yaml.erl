@@ -23,6 +23,8 @@
 
 -module(fast_yaml).
 
+-compile(no_native).
+
 %% API
 -export([load_nif/0, decode/1, decode/2, start/0, stop/0,
          decode_from_file/1, decode_from_file/2, encode/1, format_error/1]).
