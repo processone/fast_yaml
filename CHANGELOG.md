@@ -1,3 +1,7 @@
+# Version 1.0.6
+
+* Update to p1_utils 1.0.5 (Mickaël Rémond)
+
 # Version 1.0.5
 
 * Fix compilation on rebar3 (Paweł Chmielowski)
