@@ -1,3 +1,8 @@
+# Version 1.0.7
+
+* Use p1_utils 1.0.6 (Christophe Romain)
+* Make sure fast_yaml isn't compiled to native code (Holger Weiss)
+
 # Version 1.0.6
 
 * Update to p1_utils 1.0.5 (Mickaël Rémond)
