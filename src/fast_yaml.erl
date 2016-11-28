@@ -49,6 +49,9 @@ stop() ->
 
 load_nif() ->
     SOPath = p1_nif_utils:get_so_path(?MODULE, [fast_yaml], "fast_yaml"),
+    load_nif(SOPath).
+
+load_nif(SOPath) ->
     case catch erlang:load_nif(SOPath, 0) of
         ok ->
             ok;
@@ -161,7 +164,8 @@ indent(N) ->
 -include_lib("eunit/include/eunit.hrl").
 
 load_nif_test() ->
-    ?assertEqual(ok, load_nif()).
+    SOPath = p1_nif_utils:get_so_path(?MODULE, [], "fast_yaml"),
+    ?assertEqual(ok, load_nif(SOPath)).
 
 decode_test1_test() ->
     FileName = filename:join(["..", "test", "test1.yml"]),
