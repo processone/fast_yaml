@@ -1,3 +1,7 @@
+# Version 1.0.8
+
+* Load local .so instead from system package when running tests (Paweł Chmielowski)
+
 # Version 1.0.7
 
 * Use p1_utils 1.0.6 (Christophe Romain)
