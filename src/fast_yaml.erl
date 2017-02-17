@@ -60,7 +60,7 @@ load_nif(SOPath) ->
             Err
     end.
 
--spec format_error(atom() | yaml_error()) -> string().
+-spec format_error(atom() | yaml_error() | file:posix()) -> string().
 
 format_error({Tag, Reason, Line, Column}) when Tag == parser_error;
                                                Tag == scanner_error ->
@@ -80,12 +80,14 @@ format_error(_) ->
 decode(Data) ->
     decode(Data, []).
 
--spec decode_from_file(file:filename()) -> {ok, term()} | {error, yaml_error()}.
+-spec decode_from_file(file:filename()) -> {ok, term()} |
+					   {error, yaml_error() | file:posix()}.
 
 decode_from_file(File) ->
     decode_from_file(File, []).
 
--spec decode_from_file(file:filename(), options()) -> {ok, term()} | {error, yaml_error()}.
+-spec decode_from_file(file:filename(), options()) -> {ok, term()} |
+						      {error, yaml_error() | file:posix()}.
 
 decode_from_file(File, Opts) ->
     case file:read_file(File) of
