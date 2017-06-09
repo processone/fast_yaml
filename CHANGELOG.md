@@ -1,3 +1,7 @@
+# Version 1.0.10
+
+* depends on p1_utils-1.0.9
+
 # Version 1.0.9
 
 * Use p1_utils 1.0.7 (Christophe Romain)
