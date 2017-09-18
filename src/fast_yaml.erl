@@ -71,7 +71,12 @@ format_error({Tag, Reason, Line, Column}) when Tag == parser_error;
 format_error(memory_error) ->
     "Memory error";
 format_error(Reason) when is_atom(Reason) ->
-    file:format_error(Reason);
+    case file:format_error(Reason) of
+	"unknown POSIX error" ->
+	    atom_to_list(Reason);
+	Res ->
+	    Res
+    end;
 format_error(_) ->
     "Unexpected error".
 
