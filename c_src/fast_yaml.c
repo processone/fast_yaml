@@ -262,7 +262,7 @@ static ERL_NIF_TERM parse(ErlNifEnv* env, yaml_parser_t *parser,
 	result = yaml_parser_parse(parser, event);
 	if (result) {
 	    prev_events = events;
-	    events = enif_alloc(sizeof(events_t *));
+	    events = enif_alloc(sizeof(events_t));
 	    events->event = event;
 	    events->prev = prev_events;
 	    done = (event->type == YAML_STREAM_END_EVENT);
