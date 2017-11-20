@@ -1,3 +1,7 @@
+# Version 1.0.12
+
+* Fix using invalid size in allocations
+
 # Version 1.0.11
 
 * Updating p1_utils to version 1.0.10.
