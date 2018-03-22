@@ -1,3 +1,7 @@
+# Version 1.0.13
+
+* Fix compilation with rebar3
+
 # Version 1.0.12
 
 * Fix using invalid size in allocations
