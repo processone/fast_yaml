@@ -135,7 +135,7 @@ encode(B, _) when is_binary(B) ->
      lists:map(
        fun($") -> [$\\, $"];
           (C) -> C
-       end, binary_to_list(B)),
+       end, unicode:characters_to_list(B)),
      $"].
 
 encode_pair({K, V}, N) ->
@@ -235,5 +235,15 @@ decode_test4_test() ->
               <<"R0lGODlhDAAMAIQAAP//9/X\n17unp5WZmZgAAAOfn515eXv\n"
                 "Pz7Y6OjuDg4J+fn5OTk6enp\n56enmleECcgggoBADs=mZmE\n">>}]]},
        decode_from_file(FileName)).
+
+encode_test1_test() ->
+    ?assertEqual(
+       list_to_binary(encode(<<"a">>)),
+       <<"\"a\"">>).
+
+encode_unicode_test1_test() ->
+    ?assertEqual(
+       unicode:characters_to_binary(encode(<<"☃"/utf8>>)),
+       <<"\"☃\""/utf8>>).
 
 -endif.
