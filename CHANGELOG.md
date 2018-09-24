@@ -1,3 +1,7 @@
+# Version 1.0.16
+
+* Add handling of unicode string
+
 # Version 1.0.15
 
 * Updating p1_utils to version 1.0.12.
