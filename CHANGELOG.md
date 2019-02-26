@@ -1,5 +1,6 @@
 # Version 1.0.18
 
+* Updating p1_utils to version 1.0.14.
 * Add contribution guide
 
 # Version 1.0.17
