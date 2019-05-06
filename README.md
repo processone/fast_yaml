@@ -14,6 +14,8 @@ It is designed to be fast and efficient.
 Fast YAML depends on native LibYaml library. You need development
 headers for LibYaml library to build it.
 
+The minimum required Erlang/OTP version is 18.0
+
 ### Generic build
 
 You can trigger build with:

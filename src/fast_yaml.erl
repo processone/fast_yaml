@@ -105,7 +105,10 @@ decode_from_file(File, Opts) ->
 -spec decode(iodata(), options()) -> {ok, term()} | {error, yaml_error()}.
 
 decode(Data, Opts) ->
-    nif_decode(Data, make_flags(Opts)).
+    try nif_decode(Data, make_flags(Opts))
+    catch error:{parser_error, _, _, _} = Reason ->
+	    {error, Reason}
+    end.
 
 -spec encode(term()) -> iolist().
 

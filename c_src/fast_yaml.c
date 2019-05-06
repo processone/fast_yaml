@@ -46,7 +46,7 @@ static ERL_NIF_TERM make_binary_size(ErlNifEnv* env,
 
     return enif_make_binary(env, &b);
 }
-	
+
 static ERL_NIF_TERM make_binary(ErlNifEnv* env, const unsigned char *str)
 {
     size_t size = 0;
@@ -81,6 +81,25 @@ static int make_num(ErlNifEnv* env, const unsigned char *value,
     return ret;
 }
 
+static int make_atom(ErlNifEnv* env, yaml_event_t *event)
+{
+  size_t length = event->data.scalar.length;
+  yaml_char_t *value = event->data.scalar.value;
+  ERL_NIF_TERM err;
+
+  if (length > 255) {
+    char *problem = "atom value must not exceed 255 octets in length";
+    err = enif_make_tuple4(env,
+			   enif_make_atom(env, "parser_error"),
+			   make_binary(env, (unsigned char *) problem),
+			   enif_make_uint(env, event->start_mark.line),
+			   enif_make_uint(env, event->start_mark.column));
+    return enif_raise_exception(env, err);
+  } else {
+    return enif_make_atom_len(env, (char *) value, length);
+  }
+}
+
 static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags)
 {
     int as_atom = PLAIN_AS_ATOM & flags;
@@ -91,22 +110,18 @@ static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags)
     ERL_NIF_TERM rterm;
 
     if (as_atom && style == YAML_SINGLE_QUOTED_SCALAR_STYLE) {
-	rterm =  enif_make_atom_len(env,
-				    (char *) event->data.scalar.value,
-				    event->data.scalar.length);
+        rterm = make_atom(env, event);
     } else if (style == YAML_DOUBLE_QUOTED_SCALAR_STYLE) {
 	rterm = make_binary_size(env, event->data.scalar.value,
 				 event->data.scalar.length);
-    } else if ((type = make_num(env, event->data.scalar.value, 
+    } else if ((type = make_num(env, event->data.scalar.value,
 				event->data.scalar.length, &i, &d))) {
 	if (type == INTEGER)
 	    rterm = enif_make_long(env, i);
 	else
 	    rterm = enif_make_double(env, d);
     } else if (as_atom && style == YAML_PLAIN_SCALAR_STYLE && event->data.scalar.length) {
-	rterm = enif_make_atom_len(env,
-				   (char *) event->data.scalar.value,
-				   event->data.scalar.length);
+        rterm = make_atom(env, event);
     } else {
 	rterm = make_binary_size(env, event->data.scalar.value,
 				 event->data.scalar.length);
@@ -271,14 +286,14 @@ static ERL_NIF_TERM parse(ErlNifEnv* env, yaml_parser_t *parser,
 	    done = 1;
 	}
     } while (!done);
-    
+
     if (result) {
 	rterm = enif_make_tuple2(env, enif_make_atom(env, "ok"),
 				 process_events(env, &events, parser, flags));
     } else {
 	rterm = make_error(env, parser);
     }
-    
+
     free_events(&events);
     return rterm;
 }
