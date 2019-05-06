@@ -16,6 +16,5 @@ after_success:
   - coveralls-merge c.json erlang.json
 
 otp_release:
-  - 17.1
-  - 17.5
-  - 18.1
+  - 18.0
+  - 21.3
