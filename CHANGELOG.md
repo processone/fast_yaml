@@ -1,5 +1,6 @@
 # Version 1.0.19
 
+* Updating p1_utils to version 1.0.15.
 * Don't crash when atom lenght is > 255
 
 # Version 1.0.18
