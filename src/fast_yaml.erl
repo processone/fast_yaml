@@ -133,10 +133,22 @@ encode(F, _) when is_float(F) ->
     io_lib:format("~f", [F]);
 encode(A, _) when is_atom(A) ->
     atom_to_list(A);
+% http://erlang.org/doc/reference_manual/data_types.html#escape-sequences
 encode(B, _) when is_binary(B) ->
     [$",
      lists:map(
-       fun($") -> [$\\, $"];
+       fun ($\b) -> [$\\, "b"];  % $\b ==  "backspace"
+           %($\d) -> [$\\, "d"];  % $\d = "delete" % Encode work, but decode fail
+           ($\e) -> [$\\, "e"];  % $\e ==  "escape"
+           ($\f) -> [$\\, "f"];  % $\f ==  "from feed"
+           ($\n) -> [$\\, "n"];  % $\n == "new line"
+           ($\r) -> [$\\, "r"];  % $\r == "carriage return"
+           ($\s) -> [$\s];  % $\s ==  "space"
+           ($\t) -> [$\\, "t"];  % $\t ==  "tab"
+           ($\v) -> [$\\, "v"];  % $\v ==  "vertical tab"
+           ($') -> [$\\, $'];    % $"  ==  simple quote
+           ($") -> [$\\, $"];    % $"  ==  double quote
+           ($\\) -> [$\\, $\\];  % $\\ ==  backslash
           (C) -> C
        end, unicode:characters_to_list(B)),
      $"].
@@ -239,14 +251,185 @@ decode_test4_test() ->
                 "Pz7Y6OjuDg4J+fn5OTk6enp\n56enmleECcgggoBADs=mZmE\n">>}]]},
        decode_from_file(FileName)).
 
+decode_test5_test() ->
+    FileName = filename:join(["..", "test", "test5.yml"]),
+    ?assertEqual(
+        {ok,[[
+            {<<"Name">>,<<"Backslash">>},
+                {<<"Source">>,<<"\\\\\\\\">>}],
+            [{<<"Name">>,<<"Double_Quote">>},
+                {<<"Source">>,<<"\"\"">>}],
+            [{<<"Name">>,<<"Backslash_and_Double_Quote">>},
+                {<<"Source">>,<<"\"\\\"\"">>}],
+            [{<<"Name">>,<<"New_Line">>},
+                {<<"Source">>,<<"\\n">>}]]
+        },
+        decode_from_file(FileName)).
+
 encode_test1_test() ->
     ?assertEqual(
-       list_to_binary(encode(<<"a">>)),
-       <<"\"a\"">>).
+        list_to_binary(encode(<<"a">>)),
+        <<"\"a\"">>).
 
 encode_unicode_test1_test() ->
     ?assertEqual(
-       unicode:characters_to_binary(encode(<<"☃"/utf8>>)),
-       <<"\"☃\""/utf8>>).
+        unicode:characters_to_binary(encode(<<"☃"/utf8>>)),
+        <<"\"☃\""/utf8>>).
+
+encode_decode_backspace_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<"abc\bdef">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
+
+encode_decode_escape_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<"\en">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
+
+encode_decode_from_feed_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<"\f\"">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
+
+encode_decode_new_line_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<"\n">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
+
+encode_decode_carriage_return_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<"ref\r\n">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
+
+encode_decode_space_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<" toto\stata \s ">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
+
+encode_decode_tab_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<"\treturn True">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
+
+encode_decode_vertical_tab_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<"\v  ok">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
+
+encode_decode_simple_quote_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<"\'\"\'">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
+
+encode_decode_double_quote_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<"\"\"">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
+
+encode_decode_backslash_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<"\\\\\\\\">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
+
+encode_decode_quote_and_backslash_test() ->
+    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    Binary = <<"\"\\\"\"">>,
+    Encoded = encode([[{'Source', Binary}]]),
+    file:write_file(FileName, Encoded),
+    Decoded = decode_from_file(FileName, [plain_as_atom]),
+    file:delete(FileName),
+    {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
+    ?assertEqual(
+        DecodedBinary,
+        Binary
+    ).
 
 -endif.
