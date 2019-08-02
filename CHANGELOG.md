@@ -1,3 +1,7 @@
+# Version 1.0.20
+
+* Handle erlang escape sequences
+
 # Version 1.0.19
 
 * Updating p1_utils to version 1.0.15.
