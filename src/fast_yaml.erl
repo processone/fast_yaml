@@ -146,7 +146,6 @@ encode(B, _) when is_binary(B) ->
            ($\s) -> [$\s];  % $\s ==  "space"
            ($\t) -> [$\\, "t"];  % $\t ==  "tab"
            ($\v) -> [$\\, "v"];  % $\v ==  "vertical tab"
-           ($') -> [$\\, $'];    % $"  ==  simple quote
            ($") -> [$\\, $"];    % $"  ==  double quote
            ($\\) -> [$\\, $\\];  % $\\ ==  backslash
           (C) -> C
@@ -382,7 +381,7 @@ encode_decode_vertical_tab_test() ->
 
 encode_decode_simple_quote_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
-    Binary = <<"\'\"\'">>,
+    Binary = <<"'\"'">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
     Decoded = decode_from_file(FileName, [plain_as_atom]),
