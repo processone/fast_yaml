@@ -1,3 +1,7 @@
+# Version 1.0.21
+
+* Fix handling of strings with ' inside them
+
 # Version 1.0.20
 
 * Updating p1_utils to version 1.0.16.
