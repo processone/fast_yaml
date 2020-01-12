@@ -93,10 +93,22 @@ Integer and float values also get converted. All other scalar values
 stay binaries. Key in mappings also stay binary and never get coerced
 into int / float / atom .
 
+An unquoted mapping value that is an empty string gets converted into
+`undefined`. (e.g. the string `"foo:"` decodes as `[{<<"foo">>, undefined}]`)
+
+## Option `maps`
+
+Convert YAML mappings into Erlang maps.
+
+
 ```erlang
-6> fast_yaml:decode(<<"a: true\nb: -3.0\nc: string">>, [{sane_scalars, true}]).
-{ok,[[{a,true},{b,-3.0},{c,<<"string">>}]]}
+7> fast_yaml:decode(<<"a: true\nb: -3.0\nc: string">>, [{maps, true}]).
+{ok, [#{"a" => "true", "b" => -3.0, "c" => "string"}]}
 ```
+
+
+> For compatibility with the `yamerl` and `YamlElixir` libraries, use the `[sane_scalars, maps]` options.
+
 
 ## Development
 
