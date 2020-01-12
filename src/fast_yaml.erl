@@ -281,7 +281,8 @@ decode_test6_test() ->
              {<<"str2">>, <<"123">>},
              {<<"int">>, 123},
              {<<"null">>, undefined},
-             {<<"null2">>, undefined}
+             {<<"null2">>, undefined},
+             {<<"null3">>, undefined}
             ],
             [{<<"inbox">>,
               [

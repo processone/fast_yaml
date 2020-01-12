@@ -145,7 +145,7 @@ static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags, 
             else if (!strcmp((char *)event->data.scalar.value, "false")) {
                 rterm = enif_make_atom(env, "false");
             }
-            else if (!strcmp((char *)event->data.scalar.value, "null") || !event->data.scalar.length) {
+            else if (!event->data.scalar.length || !strcmp((char *)event->data.scalar.value, "null") || !strcmp((char *)event->data.scalar.value, "~")) {
                 rterm = enif_make_atom(env, "undefined");
             } else {
                 rterm = make_binary_size(env, event->data.scalar.value, event->data.scalar.length);
