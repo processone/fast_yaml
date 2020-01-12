@@ -29,7 +29,7 @@
 -export([load_nif/0, decode/1, decode/2, start/0, stop/0,
          decode_from_file/1, decode_from_file/2, encode/1, format_error/1]).
 
--type option() :: {plain_as_atom, boolean()} | plain_as_atom.
+-type option() :: {plain_as_atom, boolean()} | plain_as_atom | {sane_scalars, boolean()} | sane_scalars.
 -type options() :: [option()].
 -type parser_error() :: {parser_error, binary(), integer(), integer()}.
 -type scanner_error() :: {scanner_error, binary(), integer(), integer()}.
@@ -37,6 +37,7 @@
                       memory_error | unexpected_error.
 
 -define(PLAIN_AS_ATOM, 1).
+-define(SANE_SCALARS, 2).
 
 %%%===================================================================
 %%% API
@@ -165,6 +166,12 @@ make_flags([{plain_as_atom, false}|Opts]) ->
     make_flags(Opts);
 make_flags([plain_as_atom|Opts]) ->
     ?PLAIN_AS_ATOM bor make_flags(Opts);
+make_flags([{sane_scalars, true}|Opts]) ->
+    ?SANE_SCALARS bor make_flags(Opts);
+make_flags([{sane_scalars, false}|Opts]) ->
+    make_flags(Opts);
+make_flags([sane_scalars|Opts]) ->
+    ?SANE_SCALARS bor make_flags(Opts);
 make_flags([Opt|Opts]) ->
     error_logger:warning_msg("fast_yaml: unknown option ~p", [Opt]),
     make_flags(Opts);
@@ -268,14 +275,14 @@ decode_test5_test() ->
 decode_test6_test() ->
     FileName = filename:join(["..", "test", "test6.yml"]),
     ?assertEqual(
-        {ok,[
-             [{<<"true">>, true}],
-             [{<<"false">>, false}],
-             [{<<"str">>, <<"123">>}],
-             [{<<"str2">>, <<"123">>}],
-             [{<<"int">>, 123}],
-             [{<<"null">>, undefined}]
-            ]
+        {ok,[[
+              {<<"true">>, true},
+              {<<"false">>, false},
+              {<<"str">>, <<"123">>},
+              {<<"str2">>, <<"123">>},
+              {<<"int">>, 123},
+              {<<"null">>, undefined}
+            ]]
         },
         decode_from_file(FileName, [sane_scalars])).
 

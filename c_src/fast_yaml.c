@@ -22,6 +22,7 @@
 #define OK 0
 #define ERR_MEMORY_FAIL 1
 #define PLAIN_AS_ATOM 1
+#define SANE_SCALARS 2
 #define INTEGER 1
 #define FLOAT 2
 
@@ -100,16 +101,46 @@ static int make_atom(ErlNifEnv* env, yaml_event_t *event)
   }
 }
 
-static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags)
+static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags, int is_map_key)
 {
     int as_atom = PLAIN_AS_ATOM & flags;
+    int sane_scalars = SANE_SCALARS & flags;
+
     long int i;
     double d;
     int type;
     yaml_scalar_style_t style = event->data.scalar.style;
     ERL_NIF_TERM rterm;
 
-    if (as_atom && style == YAML_SINGLE_QUOTED_SCALAR_STYLE) {
+    if (sane_scalars) {
+        if (!is_map_key && style == YAML_PLAIN_SCALAR_STYLE) {
+
+            if ((type = make_num(env, event->data.scalar.value,
+                                 event->data.scalar.length, &i, &d))) {
+                if (type == INTEGER)
+                    rterm = enif_make_long(env, i);
+                else
+                    rterm = enif_make_double(env, d);
+            }
+
+            else if (!strcmp((char *)event->data.scalar.value, "true")) {
+                rterm = enif_make_atom(env, "true");
+            }
+
+            else if (!strcmp((char *)event->data.scalar.value, "false")) {
+                rterm = enif_make_atom(env, "false");
+            }
+
+            else if (!strcmp((char *)event->data.scalar.value, "null")) {
+                rterm = enif_make_atom(env, "undefined");
+            } else {
+                rterm = make_binary_size(env, event->data.scalar.value, event->data.scalar.length);
+            }
+
+        } else {
+            rterm = make_binary_size(env, event->data.scalar.value, event->data.scalar.length);
+        }
+    } else if (as_atom && style == YAML_SINGLE_QUOTED_SCALAR_STYLE) {
         rterm = make_atom(env, event);
     } else if (style == YAML_DOUBLE_QUOTED_SCALAR_STYLE) {
 	rterm = make_binary_size(env, event->data.scalar.value,
@@ -217,6 +248,7 @@ static ERL_NIF_TERM process_events(ErlNifEnv* env, events_t **events,
     ERL_NIF_TERM els, el;
     yaml_event_t *event;
     els = enif_make_list(env, 0);
+    int mapping_node = 0;
 
     if (events) {
 	while (*events) {
@@ -228,6 +260,7 @@ static ERL_NIF_TERM process_events(ErlNifEnv* env, events_t **events,
 		    els = enif_make_list_cell(env, el, els);
 		    break;
 		case YAML_MAPPING_END_EVENT:
+                    mapping_node = 0;
 		    el = process_events(env, events, parser, flags);
 		    els = enif_make_list_cell(env, el, els);
 		    break;
@@ -240,7 +273,7 @@ static ERL_NIF_TERM process_events(ErlNifEnv* env, events_t **events,
 		    enif_free(event);
 		    return els;
 		case YAML_SCALAR_EVENT:
-		    el = make_scalar(env, event, flags);
+		    el = make_scalar(env, event, flags, (mapping_node++) % 2);
 		    els = enif_make_list_cell(env, el, els);
 		    break;
 		case YAML_ALIAS_EVENT:
