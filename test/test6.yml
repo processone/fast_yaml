@@ -1,0 +1,6 @@
+true: true
+false: false
+str: '123'
+str2: "123"
+int: 123
+null: null

@@ -265,6 +265,20 @@ decode_test5_test() ->
         },
         decode_from_file(FileName)).
 
+decode_test6_test() ->
+    FileName = filename:join(["..", "test", "test6.yml"]),
+    ?assertEqual(
+        {ok,[
+             [{<<"true">>, true}],
+             [{<<"false">>, false}],
+             [{<<"str">>, <<"123">>}],
+             [{<<"str2">>, <<"123">>}],
+             [{<<"int">>, 123}],
+             [{<<"null">>, undefined}]
+            ]
+        },
+        decode_from_file(FileName, [sane_scalars])).
+
 encode_test1_test() ->
     ?assertEqual(
         list_to_binary(encode(<<"a">>)),
