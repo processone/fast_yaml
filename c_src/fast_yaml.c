@@ -30,7 +30,7 @@
 
 typedef struct events_t {
     yaml_event_t *event;
-    struct events_t *prev;
+    struct events_t *next;
 } events_t;
 
 static int load(ErlNifEnv* env, void** priv, ERL_NIF_TERM load_info)
@@ -103,7 +103,7 @@ static int make_atom(ErlNifEnv* env, yaml_event_t *event)
   }
 }
 
-static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags, int is_map_key)
+static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags, int is_map_value)
 {
     int as_atom = PLAIN_AS_ATOM & flags;
     int sane_scalars = SANE_SCALARS & flags;
@@ -115,8 +115,7 @@ static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags, 
     ERL_NIF_TERM rterm;
 
     if (sane_scalars) {
-        if (!is_map_key && style == YAML_PLAIN_SCALAR_STYLE) {
-
+        if (is_map_value && style == YAML_PLAIN_SCALAR_STYLE) {
             if ((type = make_num(env, event->data.scalar.value,
                                  event->data.scalar.length, &i, &d))) {
                 if (type == INTEGER)
@@ -124,21 +123,17 @@ static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags, 
                 else
                     rterm = enif_make_double(env, d);
             }
-
             else if (!strcmp((char *)event->data.scalar.value, "true")) {
                 rterm = enif_make_atom(env, "true");
             }
-
             else if (!strcmp((char *)event->data.scalar.value, "false")) {
                 rterm = enif_make_atom(env, "false");
             }
-
             else if (!strcmp((char *)event->data.scalar.value, "null")) {
                 rterm = enif_make_atom(env, "undefined");
             } else {
                 rterm = make_binary_size(env, event->data.scalar.value, event->data.scalar.length);
             }
-
         } else {
             rterm = make_binary_size(env, event->data.scalar.value, event->data.scalar.length);
         }
@@ -195,8 +190,8 @@ static ERL_NIF_TERM map(ErlNifEnv* env, ERL_NIF_TERM list)
     keys = enif_alloc(count * sizeof(ERL_NIF_TERM));
     values = enif_alloc(count * sizeof(ERL_NIF_TERM));
 
-    while (enif_get_list_cell(env, list, &key, &list)) {
-        enif_get_list_cell(env, list, &value, &list);
+    while (enif_get_list_cell(env, list, &value, &list)) {
+        enif_get_list_cell(env, list, &key, &list);
         keys[i] = key;
         values[i] = value;
         i++;
@@ -238,7 +233,7 @@ static ERL_NIF_TERM make_error(ErlNifEnv* env, yaml_parser_t *parser)
     return enif_make_tuple2(env, enif_make_atom(env, "error"), err);
 }
 
-static yaml_event_t *hd(events_t **events)
+static yaml_event_t *next(events_t **events)
 {
     yaml_event_t *event = NULL;
     events_t *tmp;
@@ -246,7 +241,7 @@ static yaml_event_t *hd(events_t **events)
     if (*events) {
 	event = (*events)->event;
 	tmp = *events;
-	*events = (*events)->prev;
+	*events = (*events)->next;
 	enif_free(tmp);
     }
 
@@ -259,7 +254,7 @@ static void free_events(events_t **events)
 
     if (events) {
 	while (*events) {
-	    event = hd(events);
+	    event = next(events);
 	    if (event) {
 		yaml_event_delete(event);
 		enif_free(event);
@@ -278,26 +273,31 @@ static ERL_NIF_TERM process_events(ErlNifEnv* env, events_t **events,
 
     if (events) {
 	while (*events) {
-	    event = hd(events);
+	    event = next(events);
+
 	    if (event) {
 		switch (event->type) {
+		case YAML_SEQUENCE_START_EVENT:
+		    el = process_events(env, events, parser, flags);
+		    els = enif_make_list_cell(env, el, els);
+		    break;
 		case YAML_SEQUENCE_END_EVENT:
+		    yaml_event_delete(event);
+		    enif_free(event);
+                    enif_make_reverse_list(env, els, &els);
+		    return els;
+		case YAML_MAPPING_START_EVENT:
 		    el = process_events(env, events, parser, flags);
 		    els = enif_make_list_cell(env, el, els);
 		    break;
 		case YAML_MAPPING_END_EVENT:
-                    mapping_node = 0;
-		    el = process_events(env, events, parser, flags);
-		    els = enif_make_list_cell(env, el, els);
-		    break;
-		case YAML_MAPPING_START_EVENT:
 		    yaml_event_delete(event);
 		    enif_free(event);
-		    return MAPS & flags ? map(env, els) : zip(env, els);
-		case YAML_SEQUENCE_START_EVENT:
-		    yaml_event_delete(event);
-		    enif_free(event);
-		    return els;
+		    if (MAPS & flags) {
+                        return map(env, els);
+                    }
+                    enif_make_reverse_list(env, els, &els);
+                    return zip(env, els);
 		case YAML_SCALAR_EVENT:
 		    el = make_scalar(env, event, flags, (mapping_node++) % 2);
 		    els = enif_make_list_cell(env, el, els);
@@ -325,6 +325,7 @@ static ERL_NIF_TERM parse(ErlNifEnv* env, yaml_parser_t *parser,
 {
     int result = 0, done = 0;
     yaml_event_t *event = NULL;
+    events_t *first_events = NULL;
     events_t *prev_events = NULL;
     events_t *events = NULL;
     ERL_NIF_TERM rterm;
@@ -335,10 +336,16 @@ static ERL_NIF_TERM parse(ErlNifEnv* env, yaml_parser_t *parser,
 	event = enif_alloc(sizeof(yaml_event_t));
 	result = yaml_parser_parse(parser, event);
 	if (result) {
-	    prev_events = events;
 	    events = enif_alloc(sizeof(events_t));
 	    events->event = event;
-	    events->prev = prev_events;
+	    events->next = NULL;
+            if (!first_events) {
+                first_events = events;
+            }
+            if (prev_events) {
+                prev_events->next = events;
+            }
+            prev_events = events;
 	    done = (event->type == YAML_STREAM_END_EVENT);
 	} else {
 	    enif_free(event);
@@ -347,13 +354,13 @@ static ERL_NIF_TERM parse(ErlNifEnv* env, yaml_parser_t *parser,
     } while (!done);
 
     if (result) {
-	rterm = enif_make_tuple2(env, enif_make_atom(env, "ok"),
-				 process_events(env, &events, parser, flags));
+        enif_make_reverse_list(env, process_events(env, &first_events, parser, flags), &rterm);
+        rterm = enif_make_tuple2(env, enif_make_atom(env, "ok"), rterm);
     } else {
 	rterm = make_error(env, parser);
     }
 
-    free_events(&events);
+    free_events(&first_events);
     return rterm;
 }
 

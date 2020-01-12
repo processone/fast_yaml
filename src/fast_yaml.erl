@@ -135,12 +135,12 @@ encode(F, _) when is_float(F) ->
     io_lib:format("~f", [F]);
 encode(A, _) when is_atom(A) ->
     atom_to_list(A);
-% http://erlang.org/doc/reference_manual/data_types.html#escape-sequences
+                                                % http://erlang.org/doc/reference_manual/data_types.html#escape-sequences
 encode(B, _) when is_binary(B) ->
     [$",
      lists:map(
        fun ($\b) -> [$\\, "b"];  % $\b ==  "backspace"
-           %($\d) -> [$\\, "d"];  % $\d = "delete" % Encode work, but decode fail
+                                                %($\d) -> [$\\, "d"];  % $\d = "delete" % Encode work, but decode fail
            ($\e) -> [$\\, "e"];  % $\e ==  "escape"
            ($\f) -> [$\\, "f"];  % $\f ==  "from feed"
            ($\n) -> [$\\, "n"];  % $\n == "new line"
@@ -150,7 +150,7 @@ encode(B, _) when is_binary(B) ->
            ($\v) -> [$\\, "v"];  % $\v ==  "vertical tab"
            ($") -> [$\\, $"];    % $"  ==  double quote
            ($\\) -> [$\\, $\\];  % $\\ ==  backslash
-          (C) -> C
+           (C) -> C
        end, unicode:characters_to_list(B)),
      $"].
 
@@ -283,40 +283,54 @@ decode_test5_test() ->
 decode_test6_test() ->
     FileName = filename:join(["..", "test", "test6.yml"]),
     ?assertEqual(
-        {ok,[[
-              {<<"true">>, true},
-              {<<"false">>, false},
-              {<<"str">>, <<"123">>},
-              {<<"str2">>, <<"123">>},
-              {<<"int">>, 123},
-              {<<"null">>, undefined}
-            ]]
-        },
-        decode_from_file(FileName, [sane_scalars])).
+       {ok,[[
+             {<<"true">>, true},
+             {<<"false">>, false},
+             {<<"str">>, <<"123">>},
+             {<<"str2">>, <<"123">>},
+             {<<"int">>, 123},
+             {<<"null">>, undefined}
+            ],
+            [{<<"inbox">>,
+              [
+               {<<"enabled">>, true},
+               {<<"filters">>, [[{<<"icon">>, <<"inbox">>}, {<<"label">>, <<"Inbox">>}]]}
+              ]}]
+           ]
+       },
+       decode_from_file(FileName, [sane_scalars])).
 
 decode_test6_as_map_test() ->
-    FileName = filename:join(["..", "test", "test6.yml"]),
+    FileName = filename:join(["..", "test", "test7.yml"]),
     ?assertEqual(
-        {ok,[#{
-               <<"true">> => true,
-               <<"false">> => false,
-               <<"str">> => <<"123">>,
-               <<"str2">> => <<"123">>,
-               <<"int">> => 123,
-               <<"null">> => undefined
-              }]
-        },
-        decode_from_file(FileName, [sane_scalars, maps])).
+       {ok,[#{<<"foo">> =>
+                  #{<<"true">> => true,
+                    <<"false">> => false,
+                    <<"str">> => <<"123">>,
+                    <<"str2">> => <<"123">>,
+                    <<"int">> => 123,
+                    <<"null">> => undefined
+                   }},
+            #{<<"inbox">> =>
+                  #{<<"enabled">> => true,
+                    <<"filters">> =>
+                        [#{<<"icon">> => <<"inbox">>,
+                           <<"label">> => <<"Inbox">>
+                          }
+                        ]
+                   }
+             }]},
+       decode_from_file(FileName, [sane_scalars, maps])).
 
 encode_test1_test() ->
     ?assertEqual(
-        list_to_binary(encode(<<"a">>)),
-        <<"\"a\"">>).
+       list_to_binary(encode(<<"a">>)),
+       <<"\"a\"">>).
 
 encode_unicode_test1_test() ->
     ?assertEqual(
-        unicode:characters_to_binary(encode(<<"☃"/utf8>>)),
-        <<"\"☃\""/utf8>>).
+       unicode:characters_to_binary(encode(<<"☃"/utf8>>)),
+       <<"\"☃\""/utf8>>).
 
 encode_decode_backspace_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -327,9 +341,9 @@ encode_decode_backspace_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 encode_decode_escape_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -340,9 +354,9 @@ encode_decode_escape_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 encode_decode_from_feed_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -353,9 +367,9 @@ encode_decode_from_feed_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 encode_decode_new_line_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -366,9 +380,9 @@ encode_decode_new_line_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 encode_decode_carriage_return_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -379,9 +393,9 @@ encode_decode_carriage_return_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 encode_decode_space_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -392,9 +406,9 @@ encode_decode_space_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 encode_decode_tab_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -405,9 +419,9 @@ encode_decode_tab_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 encode_decode_vertical_tab_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -418,9 +432,9 @@ encode_decode_vertical_tab_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 encode_decode_simple_quote_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -431,9 +445,9 @@ encode_decode_simple_quote_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 encode_decode_double_quote_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -444,9 +458,9 @@ encode_decode_double_quote_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 encode_decode_backslash_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -457,9 +471,9 @@ encode_decode_backslash_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 encode_decode_quote_and_backslash_test() ->
     FileName = filename:join(["..", "test", "temp_test.yml"]),
@@ -470,8 +484,8 @@ encode_decode_quote_and_backslash_test() ->
     file:delete(FileName),
     {ok, [[[{'Source', DecodedBinary}]]]} = Decoded,
     ?assertEqual(
-        DecodedBinary,
-        Binary
-    ).
+       DecodedBinary,
+       Binary
+      ).
 
 -endif.
