@@ -38,6 +38,7 @@
 
 -define(PLAIN_AS_ATOM, 1).
 -define(SANE_SCALARS, 2).
+-define(MAPS, 4).
 
 %%%===================================================================
 %%% API
@@ -172,6 +173,12 @@ make_flags([{sane_scalars, false}|Opts]) ->
     make_flags(Opts);
 make_flags([sane_scalars|Opts]) ->
     ?SANE_SCALARS bor make_flags(Opts);
+make_flags([{maps, true}|Opts]) ->
+    ?MAPS bor make_flags(Opts);
+make_flags([{maps, false}|Opts]) ->
+    make_flags(Opts);
+make_flags([maps|Opts]) ->
+    ?MAPS bor make_flags(Opts);
 make_flags([Opt|Opts]) ->
     error_logger:warning_msg("fast_yaml: unknown option ~p", [Opt]),
     make_flags(Opts);
@@ -272,6 +279,7 @@ decode_test5_test() ->
         },
         decode_from_file(FileName)).
 
+
 decode_test6_test() ->
     FileName = filename:join(["..", "test", "test6.yml"]),
     ?assertEqual(
@@ -285,6 +293,20 @@ decode_test6_test() ->
             ]]
         },
         decode_from_file(FileName, [sane_scalars])).
+
+decode_test6_as_map_test() ->
+    FileName = filename:join(["..", "test", "test6.yml"]),
+    ?assertEqual(
+        {ok,[#{
+               <<"true">> => true,
+               <<"false">> => false,
+               <<"str">> => <<"123">>,
+               <<"str2">> => <<"123">>,
+               <<"int">> => 123,
+               <<"null">> => undefined
+              }]
+        },
+        decode_from_file(FileName, [sane_scalars, maps])).
 
 encode_test1_test() ->
     ?assertEqual(

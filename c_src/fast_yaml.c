@@ -23,6 +23,8 @@
 #define ERR_MEMORY_FAIL 1
 #define PLAIN_AS_ATOM 1
 #define SANE_SCALARS 2
+#define MAPS 4
+
 #define INTEGER 1
 #define FLOAT 2
 
@@ -182,6 +184,30 @@ static ERL_NIF_TERM zip(ErlNifEnv* env, ERL_NIF_TERM list)
 	return list;
 }
 
+static ERL_NIF_TERM map(ErlNifEnv* env, ERL_NIF_TERM list)
+{
+    ERL_NIF_TERM key, value, *keys, *values;
+    unsigned int len = 0, i = 0;
+
+    enif_get_list_length(env, list, &len);
+    int count = len / 2;
+
+    keys = enif_alloc(count * sizeof(ERL_NIF_TERM));
+    values = enif_alloc(count * sizeof(ERL_NIF_TERM));
+
+    while (enif_get_list_cell(env, list, &key, &list)) {
+        enif_get_list_cell(env, list, &value, &list);
+        keys[i] = key;
+        values[i] = value;
+        i++;
+    }
+    ERL_NIF_TERM result;
+    enif_make_map_from_arrays(env, keys, values, count, &result);
+    enif_free(keys);
+    enif_free(values);
+    return result;
+}
+
 static ERL_NIF_TERM make_error(ErlNifEnv* env, yaml_parser_t *parser)
 {
     ERL_NIF_TERM err;
@@ -267,7 +293,7 @@ static ERL_NIF_TERM process_events(ErlNifEnv* env, events_t **events,
 		case YAML_MAPPING_START_EVENT:
 		    yaml_event_delete(event);
 		    enif_free(event);
-		    return zip(env, els);
+		    return MAPS & flags ? map(env, els) : zip(env, els);
 		case YAML_SEQUENCE_START_EVENT:
 		    yaml_event_delete(event);
 		    enif_free(event);
