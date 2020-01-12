@@ -280,6 +280,7 @@ static ERL_NIF_TERM process_events(ErlNifEnv* env, events_t **events,
 		case YAML_SEQUENCE_START_EVENT:
 		    el = process_events(env, events, parser, flags, 0);
 		    els = enif_make_list_cell(env, el, els);
+                    mapping_node = 0;
 		    break;
 		case YAML_SEQUENCE_END_EVENT:
 		    yaml_event_delete(event);
