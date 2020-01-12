@@ -18,6 +18,7 @@
 #include <yaml.h>
 #include <erl_nif.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #define OK 0
 #define ERR_MEMORY_FAIL 1
@@ -179,28 +180,22 @@ static ERL_NIF_TERM zip(ErlNifEnv* env, ERL_NIF_TERM list)
 	return list;
 }
 
-static ERL_NIF_TERM map(ErlNifEnv* env, ERL_NIF_TERM list)
+static ERL_NIF_TERM map(ErlNifEnv* env, ERL_NIF_TERM pairs)
 {
-    ERL_NIF_TERM key, value, *keys, *values;
-    unsigned int len = 0, i = 0;
+    ERL_NIF_TERM ret;
+    ERL_NIF_TERM key;
+    ERL_NIF_TERM val;
 
-    enif_get_list_length(env, list, &len);
-    int count = len / 2;
-
-    keys = enif_alloc(count * sizeof(ERL_NIF_TERM));
-    values = enif_alloc(count * sizeof(ERL_NIF_TERM));
-
-    while (enif_get_list_cell(env, list, &value, &list)) {
-        enif_get_list_cell(env, list, &key, &list);
-        keys[i] = key;
-        values[i] = value;
-        i++;
+     ret = enif_make_new_map(env);
+    while(enif_get_list_cell(env, pairs, &val, &pairs)) {
+        if(!enif_get_list_cell(env, pairs, &key, &pairs)) {
+            assert(0 == 1 && "Unbalanced object pairs.");
+        }
+        if(!enif_make_map_put(env, ret, key, val, &ret)) {
+            return 0;
+        }
     }
-    ERL_NIF_TERM result;
-    enif_make_map_from_arrays(env, keys, values, count, &result);
-    enif_free(keys);
-    enif_free(values);
-    return result;
+    return ret;
 }
 
 static ERL_NIF_TERM make_error(ErlNifEnv* env, yaml_parser_t *parser)

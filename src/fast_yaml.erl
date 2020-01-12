@@ -327,6 +327,11 @@ decode_test7_test() ->
              }]},
        decode_from_file(FileName, [sane_scalars, maps])).
 
+decode_test8_test() ->
+    FileName = filename:join(["..", "test", "test8.yml"]),
+    {ok, Contents} = file:read_file(FileName),
+    ?assertMatch({ok,[#{}]}, decode(Contents, [sane_scalars, maps])).
+
 encode_test1_test() ->
     ?assertEqual(
        list_to_binary(encode(<<"a">>)),
