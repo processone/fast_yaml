@@ -289,7 +289,8 @@ decode_test6_test() ->
              {<<"str">>, <<"123">>},
              {<<"str2">>, <<"123">>},
              {<<"int">>, 123},
-             {<<"null">>, undefined}
+             {<<"null">>, undefined},
+             {<<"null2">>, undefined}
             ],
             [{<<"inbox">>,
               [
@@ -300,7 +301,7 @@ decode_test6_test() ->
        },
        decode_from_file(FileName, [sane_scalars])).
 
-decode_test6_as_map_test() ->
+decode_test7_test() ->
     FileName = filename:join(["..", "test", "test7.yml"]),
     ?assertEqual(
        {ok,[#{<<"foo">> =>

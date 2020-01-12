@@ -4,6 +4,7 @@ str: '123'
 str2: "123"
 int: 123
 null: null
+null2:
 ---
 inbox:
   enabled: true
