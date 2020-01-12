@@ -25,8 +25,10 @@
 
 -compile(no_native).
 
+-on_load(load_nif/0).
+
 %% API
--export([load_nif/0, decode/1, decode/2, start/0, stop/0,
+-export([decode/1, decode/2, start/0, stop/0,
          decode_from_file/1, decode_from_file/2, encode/1, format_error/1]).
 
 -type option() :: {plain_as_atom, boolean()} | plain_as_atom | {sane_scalars, boolean()} | sane_scalars.
@@ -51,16 +53,7 @@ stop() ->
 
 load_nif() ->
     SOPath = p1_nif_utils:get_so_path(?MODULE, [fast_yaml], "fast_yaml"),
-    load_nif(SOPath).
-
-load_nif(SOPath) ->
-    case catch erlang:load_nif(SOPath, 0) of
-        ok ->
-            ok;
-        Err ->
-            error_logger:warning_msg("unable to load fast_yaml NIF: ~p~n", [Err]),
-            Err
-    end.
+    erlang:load_nif(SOPath, 0).
 
 -spec format_error(atom() | yaml_error() | file:posix()) -> string().
 
@@ -197,10 +190,6 @@ indent(N) ->
 %%%===================================================================
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-load_nif_test() ->
-    SOPath = p1_nif_utils:get_so_path(?MODULE, [], "fast_yaml"),
-    ?assertEqual(ok, load_nif(SOPath)).
 
 decode_test1_test() ->
     FileName = filename:join(["..", "test", "test1.yml"]),

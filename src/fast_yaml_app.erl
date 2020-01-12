@@ -32,12 +32,7 @@
 %%% Application callbacks
 %%%===================================================================
 start(_StartType, _StartArgs) ->
-    case fast_yaml:load_nif() of
-        ok ->
-            fast_yaml_sup:start_link();
-        Err ->
-            Err
-    end.
+    fast_yaml_sup:start_link().
 
 stop(_State) ->
     ok.

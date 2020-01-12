@@ -39,6 +39,21 @@ static int load(ErlNifEnv* env, void** priv, ERL_NIF_TERM load_info)
     return 0;
 }
 
+static int reload(ErlNifEnv* env, void** priv, ERL_NIF_TERM info)
+{
+    return load(env, priv, info);
+}
+
+static int upgrade(ErlNifEnv* env, void** priv, void** old_priv, ERL_NIF_TERM info)
+{
+    return load(env, priv, info);
+}
+
+static void unload(ErlNifEnv* env, void* priv)
+{
+    enif_free(priv);
+}
+
 static ERL_NIF_TERM make_binary_size(ErlNifEnv* env,
 				     const unsigned char *str,
 				     size_t size)
@@ -388,4 +403,4 @@ static ErlNifFunc nif_funcs[] =
 	{"nif_decode", 2, decode}
     };
 
-ERL_NIF_INIT(fast_yaml, nif_funcs, load, NULL, NULL, NULL)
+ERL_NIF_INIT(fast_yaml, nif_funcs, load, reload, upgrade, unload)
