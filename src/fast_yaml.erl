@@ -313,6 +313,8 @@ decode_test6_as_map_test() ->
                    }},
             #{<<"inbox">> =>
                   #{<<"enabled">> => true,
+                    <<"map">> => #{<<"value">> => 1},
+                    <<"height">> => 100,
                     <<"filters">> =>
                         [#{<<"icon">> => <<"inbox">>,
                            <<"label">> => <<"Inbox">>
