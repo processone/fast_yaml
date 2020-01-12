@@ -1,3 +1,8 @@
+ints:
+- 1
+- 2
+- 3
+---
 true: true
 false: false
 str: '123'

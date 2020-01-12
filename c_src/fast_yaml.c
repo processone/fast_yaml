@@ -264,7 +264,7 @@ static void free_events(events_t **events)
 }
 
 static ERL_NIF_TERM process_events(ErlNifEnv* env, events_t **events,
-				   yaml_parser_t *parser, int flags)
+				   yaml_parser_t *parser, int flags, int is_map)
 {
     ERL_NIF_TERM els, el;
     yaml_event_t *event;
@@ -278,7 +278,7 @@ static ERL_NIF_TERM process_events(ErlNifEnv* env, events_t **events,
 	    if (event) {
 		switch (event->type) {
 		case YAML_SEQUENCE_START_EVENT:
-		    el = process_events(env, events, parser, flags);
+		    el = process_events(env, events, parser, flags, 0);
 		    els = enif_make_list_cell(env, el, els);
 		    break;
 		case YAML_SEQUENCE_END_EVENT:
@@ -287,7 +287,7 @@ static ERL_NIF_TERM process_events(ErlNifEnv* env, events_t **events,
                     enif_make_reverse_list(env, els, &els);
 		    return els;
 		case YAML_MAPPING_START_EVENT:
-		    el = process_events(env, events, parser, flags);
+		    el = process_events(env, events, parser, flags, 1);
 		    els = enif_make_list_cell(env, el, els);
                     mapping_node = 0;
 		    break;
@@ -300,7 +300,7 @@ static ERL_NIF_TERM process_events(ErlNifEnv* env, events_t **events,
                     enif_make_reverse_list(env, els, &els);
                     return zip(env, els);
 		case YAML_SCALAR_EVENT:
-		    el = make_scalar(env, event, flags, (mapping_node++) % 2);
+		    el = make_scalar(env, event, flags, is_map ? (mapping_node++) % 2 : 1);
 		    els = enif_make_list_cell(env, el, els);
 		    break;
 		case YAML_ALIAS_EVENT:
@@ -355,7 +355,7 @@ static ERL_NIF_TERM parse(ErlNifEnv* env, yaml_parser_t *parser,
     } while (!done);
 
     if (result) {
-        enif_make_reverse_list(env, process_events(env, &first_events, parser, flags), &rterm);
+        enif_make_reverse_list(env, process_events(env, &first_events, parser, flags, 0), &rterm);
         rterm = enif_make_tuple2(env, enif_make_atom(env, "ok"), rterm);
     } else {
 	rterm = make_error(env, parser);

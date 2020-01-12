@@ -283,8 +283,9 @@ decode_test5_test() ->
 decode_test6_test() ->
     FileName = filename:join(["..", "test", "test6.yml"]),
     ?assertEqual(
-       {ok,[[
-             {<<"true">>, true},
+       {ok,[[{<<"ints">>, [1, 2, 3]}
+            ],
+            [{<<"true">>, true},
              {<<"false">>, false},
              {<<"str">>, <<"123">>},
              {<<"str2">>, <<"123">>},
