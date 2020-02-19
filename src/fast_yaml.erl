@@ -188,8 +188,24 @@ load_nif_test() ->
     SOPath = p1_nif_utils:get_so_path(?MODULE, [], "fast_yaml"),
     ?assertEqual(ok, load_nif(SOPath)).
 
+test_file_path(File) ->
+    F1 = filename:join(["test", File]),
+    case filelib:is_file(F1) of
+        true -> F1;
+        _ -> filename:join(["..", "test", File])
+    end.
+
+temp_file_path() ->
+    case filelib:is_dir("test") of
+        true ->
+            filename:join(["test", "temp_test.yml"]);
+        _ ->
+            filename:join(["..", "test", "temp_test.yml"])
+    end.
+
 decode_test1_test() ->
-    FileName = filename:join(["..", "test", "test1.yml"]),
+    FileName = test_file_path("test1.yml"),
+    %?assertEqual(file:get_cwd(), "dupa"),
     ?assertEqual(
        {ok,[[{<<"Time">>,<<"2001-11-23 15:01:42 -5">>},
              {<<"User">>,<<"ed">>},
@@ -211,7 +227,7 @@ decode_test1_test() ->
        decode_from_file(FileName)).
 
 decode_test2_test() ->
-    FileName = filename:join(["..", "test", "test2.yml"]),
+    FileName = test_file_path("test2.yml"),
     ?assertEqual(
        {ok,[[[{step,[{instrument,<<"Lasik 2000">>},
                      {pulseEnergy,5.4},
@@ -230,7 +246,7 @@ decode_test2_test() ->
        decode_from_file(FileName, [plain_as_atom])).
 
 decode_test3_test() ->
-    FileName = filename:join(["..", "test", "test3.yml"]),
+    FileName = test_file_path("test3.yml"),
     ?assertEqual(
        {ok,[[{<<"a">>,123},
              {<<"b">>,<<"123">>},
@@ -243,7 +259,7 @@ decode_test3_test() ->
        decode_from_file(FileName)).
 
 decode_test4_test() ->
-    FileName = filename:join(["..", "test", "test4.yml"]),
+    FileName = test_file_path("test4.yml"),
     ?assertEqual(
        {ok,[[{<<"picture">>,
               <<"R0lGODlhDAAMAIQAAP//9/X\n17unp5WZmZgAAAOfn515eXv\n"
@@ -251,7 +267,7 @@ decode_test4_test() ->
        decode_from_file(FileName)).
 
 decode_test5_test() ->
-    FileName = filename:join(["..", "test", "test5.yml"]),
+    FileName = test_file_path("test5.yml"),
     ?assertEqual(
         {ok,[[
             {<<"Name">>,<<"Backslash">>},
@@ -276,7 +292,7 @@ encode_unicode_test1_test() ->
         <<"\"☃\""/utf8>>).
 
 encode_decode_backspace_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<"abc\bdef">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
@@ -289,7 +305,7 @@ encode_decode_backspace_test() ->
     ).
 
 encode_decode_escape_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<"\en">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
@@ -302,7 +318,7 @@ encode_decode_escape_test() ->
     ).
 
 encode_decode_from_feed_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<"\f\"">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
@@ -315,7 +331,7 @@ encode_decode_from_feed_test() ->
     ).
 
 encode_decode_new_line_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<"\n">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
@@ -328,7 +344,7 @@ encode_decode_new_line_test() ->
     ).
 
 encode_decode_carriage_return_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<"ref\r\n">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
@@ -341,7 +357,7 @@ encode_decode_carriage_return_test() ->
     ).
 
 encode_decode_space_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<" toto\stata \s ">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
@@ -354,7 +370,7 @@ encode_decode_space_test() ->
     ).
 
 encode_decode_tab_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<"\treturn True">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
@@ -367,7 +383,7 @@ encode_decode_tab_test() ->
     ).
 
 encode_decode_vertical_tab_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<"\v  ok">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
@@ -380,7 +396,7 @@ encode_decode_vertical_tab_test() ->
     ).
 
 encode_decode_simple_quote_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<"'\"'">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
@@ -393,7 +409,7 @@ encode_decode_simple_quote_test() ->
     ).
 
 encode_decode_double_quote_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<"\"\"">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
@@ -406,7 +422,7 @@ encode_decode_double_quote_test() ->
     ).
 
 encode_decode_backslash_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<"\\\\\\\\">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
@@ -419,7 +435,7 @@ encode_decode_backslash_test() ->
     ).
 
 encode_decode_quote_and_backslash_test() ->
-    FileName = filename:join(["..", "test", "temp_test.yml"]),
+    FileName = temp_file_path(),
     Binary = <<"\"\\\"\"">>,
     Encoded = encode([[{'Source', Binary}]]),
     file:write_file(FileName, Encoded),
