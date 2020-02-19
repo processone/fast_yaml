@@ -13,10 +13,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Install
+      run: rebar get-deps
     - name: Compile
-      run: rebar3 compile
+      run: rebar compile xref
     - name: Run tests
-      run: rebar3 do eunit, ct
+      run: rebar skip_deps=true eunit
     - name: Coveralls
       uses: coverallsapp/github-action@master
       with:
