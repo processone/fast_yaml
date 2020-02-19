@@ -14,11 +14,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install
+      run: pip install --user cpp-coveralls coveralls-merge
+    - name: Get deps
       run: rebar get-deps
     - name: Compile
       run: rebar compile xref
     - name: Run tests
       run: rebar skip_deps=true eunit
+    - name: Coveralls merge
+      run: |
+        coveralls --exclude lib --exclude tests --gcov-options '\-lp' --dump c.json
+        coveralls-merge c.json erlang.json
     - name: Coveralls
       uses: coverallsapp/github-action@master
       with:
