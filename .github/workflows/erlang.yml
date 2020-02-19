@@ -18,7 +18,7 @@ jobs:
     - name: Compile
       run: rebar3 compile xref
     - name: Run tests
-      run: rebar3 skip_deps=true eunit
+      run: rebar3 eunit
     - name: Coveralls
       uses: coverallsapp/github-action@master
       with:
