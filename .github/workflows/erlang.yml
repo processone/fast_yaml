@@ -6,10 +6,13 @@ jobs:
 
   build:
     name: Build
+    strategy:
+      matrix:
+        erlang:  ["18.0", "21.3"]
     runs-on: ubuntu-latest
 
     container:
-      image: erlang:21.3
+      image: erlang:${{ matrix.erlang }}
 
     steps:
     - uses: actions/checkout@v2
