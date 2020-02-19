@@ -1,9 +1,16 @@
 name: Erlang CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
 
 jobs:
-
   build:
     name: Build
     strategy:
