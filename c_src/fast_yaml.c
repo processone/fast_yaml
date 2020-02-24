@@ -26,9 +26,6 @@
 #define SANE_SCALARS 2
 #define MAPS 4
 
-#define INTEGER 1
-#define FLOAT 2
-
 typedef struct events_t {
     yaml_event_t *event;
     struct events_t *next;
@@ -74,10 +71,11 @@ static ERL_NIF_TERM make_binary(ErlNifEnv* env, const unsigned char *str)
     return make_binary_size(env, str, size);
 }
 
-static int make_num(ErlNifEnv* env, const unsigned char *value,
-                    size_t size, long int *i, double *d)
+static int make_num(ErlNifEnv* env, const unsigned char *value, size_t size, ERL_NIF_TERM *result)
 {
-    int ret = 0;
+    long int i;
+    double d;
+    *result = 0;
 
     if (size>0) {
         char *buf = enif_alloc(size + 1);
@@ -85,19 +83,22 @@ static int make_num(ErlNifEnv* env, const unsigned char *value,
             memcpy(buf, value, size);
             buf[size] = '\0';
             char *check;
-            *i = strtol(buf, &check, 10);
+            i = strtol(buf, &check, 10);
             if (*check == '\0')
-                ret = INTEGER;
+                *result = enif_make_long(env, i);
             else if (*check == '.') {
-                *d = strtod(buf, &check);
+                d = strtod(buf, &check);
                 if (*check == '\0')
-                    ret = FLOAT;
+                    *result = enif_make_double(env, d);
             }
             enif_free(buf);
+            if (*result) {
+                return 0;
+            }
         }
     }
 
-    return ret;
+    return 1;
 }
 
 static int make_atom(ErlNifEnv* env, yaml_event_t *event)
@@ -132,12 +133,8 @@ static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags, 
 
     if (sane_scalars) {
         if (is_map_value && style == YAML_PLAIN_SCALAR_STYLE) {
-            if ((type = make_num(env, event->data.scalar.value,
-                                 event->data.scalar.length, &i, &d))) {
-                if (type == INTEGER)
-                    rterm = enif_make_long(env, i);
-                else
-                    rterm = enif_make_double(env, d);
+            if ((!make_num(env, event->data.scalar.value, event->data.scalar.length, &rterm))) {
+                // rterm filled in make_num
             }
             else if (!strcmp((char *)event->data.scalar.value, "true")) {
                 rterm = enif_make_atom(env, "true");
@@ -158,12 +155,8 @@ static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags, 
     } else if (style == YAML_DOUBLE_QUOTED_SCALAR_STYLE) {
         rterm = make_binary_size(env, event->data.scalar.value,
                                  event->data.scalar.length);
-    } else if ((type = make_num(env, event->data.scalar.value,
-                                event->data.scalar.length, &i, &d))) {
-        if (type == INTEGER)
-            rterm = enif_make_long(env, i);
-        else
-            rterm = enif_make_double(env, d);
+    } else if ((!make_num(env, event->data.scalar.value, event->data.scalar.length, &rterm))) {
+        // rterm filled in make_num
     } else if (as_atom && style == YAML_PLAIN_SCALAR_STYLE && event->data.scalar.length) {
         rterm = make_atom(env, event);
     } else {
