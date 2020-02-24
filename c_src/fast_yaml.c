@@ -125,9 +125,6 @@ static ERL_NIF_TERM make_scalar(ErlNifEnv* env, yaml_event_t *event, int flags, 
     int as_atom = PLAIN_AS_ATOM & flags;
     int sane_scalars = SANE_SCALARS & flags;
 
-    long int i;
-    double d;
-    int type;
     yaml_scalar_style_t style = event->data.scalar.style;
     ERL_NIF_TERM rterm;
 
