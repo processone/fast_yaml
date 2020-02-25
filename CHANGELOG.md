@@ -1,3 +1,9 @@
+# Version 1.0.23
+
+* Add flag that decodes yaml maps to erlang maps (Thanks to Arjan Scherpenisse)
+* Add flag that converts special values to erlang equivalents (Thanks to Arjan Scherpenisse)
+* Add p1_utils as dependant app
+
 # Version 1.0.22
 
 * Updating p1_utils to version 1.0.17.
