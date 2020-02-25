@@ -1,6 +1,6 @@
 # Fast YAML
 
-[![Build Status](https://travis-ci.org/processone/fast_yaml.svg?branch=master)](https://travis-ci.org/processone/fast_yaml) [![Coverage Status](https://coveralls.io/repos/processone/fast_yaml/badge.svg?branch=master&service=github)](https://coveralls.io/github/processone/fast_yaml?branch=master) [![Hex version](https://img.shields.io/hexpm/v/fast_yaml.svg "Hex version")](https://hex.pm/packages/fast_yaml)
+![Erlang CI](https://github.com/processone/fast_yaml/workflows/Erlang%20CI/badge.svg) [![Hex version](https://img.shields.io/hexpm/v/fast_yaml.svg "Hex version")](https://hex.pm/packages/fast_yaml)
 
 Fast YAML is an Erlang wrapper for
 [libyaml](http://pyyaml.org/wiki/LibYAML) "C" library.
