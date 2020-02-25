@@ -50,7 +50,13 @@ ok
 
 2> fast_yaml:decode(<<"a: 1\nb: -3.0">>).
 {ok,[[{<<"a">>,1},{<<"b">>,-3.0}]]}
+```
 
+## Option `plain_as_atom`
+
+Converts all unquoted YAML values to atoms
+
+```erlang
 3> fast_yaml:decode(<<"a: 1\nb: -3.0">>, [{plain_as_atom, true}]).
 {ok,[[{a,1},{b,-3.0}]]}
 
@@ -74,6 +80,35 @@ ok
       [{step,<<"id001">>}],
       [{step,<<"id002">>}]]]}
 ```
+
+## Option `sane_scalars`
+
+Converts the following scalar values to their Erlang-native data type:
+
+`"null"` → `undefined`
+`"true"` → `true`
+`"false"` → `false`
+
+Integer and float values also get converted. All other scalar values
+stay binaries. Key in mappings also stay binary and never get coerced
+into int / float / atom .
+
+An unquoted mapping value that is an empty string gets converted into
+`undefined`. (e.g. the string `"foo:"` decodes as `[{<<"foo">>, undefined}]`)
+
+## Option `maps`
+
+Convert YAML mappings into Erlang maps.
+
+
+```erlang
+7> fast_yaml:decode(<<"a: true\nb: -3.0\nc: string">>, [{maps, true}]).
+{ok, [#{"a" => "true", "b" => -3.0, "c" => "string"}]}
+```
+
+
+> For compatibility with the `yamerl` and `YamlElixir` libraries, use the `[sane_scalars, maps]` options.
+
 
 ## Development
 

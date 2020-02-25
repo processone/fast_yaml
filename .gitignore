@@ -13,6 +13,7 @@ vars.config
 rebar
 deps/
 autom4te.cache/
+test/*.beam
 
 *.eqc
 .eqc-info

@@ -1,0 +1,16 @@
+foo:
+  true: true
+  false: false
+  str: '123'
+  str2: "123"
+  int: 123
+  null: null
+---
+inbox:
+  enabled: true
+  map:
+    value: 1
+  height: 100
+  filters:
+    - icon: inbox
+      label: Inbox

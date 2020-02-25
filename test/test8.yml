@@ -1,0 +1,270 @@
+type: form # or 'table'
+
+# Define where the content gets stored
+storage:
+  type: script # stored inside a script file
+  script_title: dialogs  # Please create a YAML file with this title!
+
+# title of the CMS section
+title: Dialogs
+
+generators:
+  - type: mustache
+    script_title: z1_dialogs_generated
+    template: >
+      {{#.}}
+
+      ###### {{ dialog }} #####
+
+      {{#dialog}}
+      dialog {{{dialog}}} do
+        dialog  = first(@dialogs[dialog: "{{{dialog}}}"])
+        steps   = dialog.steps
+        log steps
+        {{#steps}}
+        {{#dialog_name}}
+        invoke {{{dialog_name}}}
+        {{/dialog_name}}
+        {{^dialog_name}}
+        step = first(dialog.steps[id: "{{{id}}}"])
+        invoke step
+        {{/dialog_name}}
+        {{/steps}}
+      end
+      {{/dialog}}
+
+      {{/.}}
+
+# Optional extra description / help text
+description: Form to configure marketing and sales sequences
+
+        # branch do
+        # {{#answers}}
+        #   answer == _({{{title}}}) -> user.{{{output}}} = {{value}}
+        # {{/answers}}
+        # end
+
+# see http://blueprintjs.com/docs/v2/#icons for possible icon names
+icon: chat
+
+# The form definition, defines the data that can be edited
+form:
+  # the JSON schema, describing the form
+  schema:
+    title: Dialogs
+    type: array
+    items:
+      type: object
+      properties:
+        dialog: { type: string, title: "Dialog" }
+        steps:
+          type: array
+          title: Responses
+          items:
+            type: object
+            properties:
+              type:       { type: string, title: "Type", enum: ['ask', 'say', 'image', 'event', 'tag', 'email', 'timer', 'invoke dialog', 'invoke message', 'calculate'] }
+              id:         { type: string }
+              conditions: { type: array,  title: "Conditions", items: { "$ref": "#/definitions/condition" } }
+            required:     [ "type", "id" ]
+            dependencies:
+              type:
+                oneOf:
+                  - properties:
+                      type:         { enum: ['ask'] }
+                      output:       { type: string, title: "Field" }
+                      question:     { type: string, title: Question }
+                      alternatives:
+                        type: array
+                        title: Alternatives
+                        items:
+                          type: string
+                      answers:      { type: array,  title: Answers, items: { "$ref": "#/definitions/answer" } }
+                    required:       [ "question", "output" ]
+                  - properties:
+                      type:         { enum: ['say'] }
+                      text:         { type: string, title: "Text"}
+                      alternatives:
+                        type: array
+                        title: Alternatives
+                        items:
+                          type: string
+                    required:       [ "text" ]
+                  - properties:
+                      type:         { enum: ['image'] }
+                      image_url:    { type: string, title: Image }
+                    required:       [ "image_url" ]
+                  - properties:
+                      type:         { enum: ['event'] }
+                      event:        { type: string, title: Event }
+                      payload:      { type: string, title: Payload }
+                    required:       [ "event" ]
+                  - properties:
+                      type:         { enum: ['tag'] }
+                      tag:          { type: string, title: Tag }
+                    required:       [ "tag" ]
+                  - properties:
+                      type:         { enum: ['email'] }
+                      to_user:      { type: string, enum: ["user", "recipients", "user and recipients"], title: Send to user }
+                      recipients:   { type: string, title: Other recipients }
+                      subject:      { type: string, title: Subject }
+                      body:         { type: string, title: Body }
+                    required:       [ "recipients", "subject", "body" ]
+                  - properties:
+                      type:         { enum: ['timer'] }
+                      day:
+                        type: string
+                        title: "After"
+                        enum: ["0 days", "1 day", "2 days", "3 days", "4 days", "5 days", "6 days", "1 week", "2 weeks", "3 weeks", "1 month", "2 months"]
+                      time:
+                        type: string
+                        title: "At"
+                        enum: ["00:00", "00:15", "00:30", "00:45",
+                               "01:00", "01:15", "01:30", "01:45",
+                               "02:00", "02:15", "02:30", "02:45",
+                               "03:00", "03:15", "03:30", "03:45",
+                               "04:00", "04:15", "04:30", "04:45",
+                               "05:00", "05:15", "05:30", "05:45",
+                               "06:00", "06:15", "06:30", "06:45",
+                               "07:00", "07:15", "07:30", "07:45",
+                               "08:00", "08:15", "08:30", "08:45",
+                               "09:00", "09:15", "09:30", "09:45",
+                               "10:00", "10:15", "10:30", "10:45",
+                               "11:00", "11:15", "11:30", "11:45",
+                               "12:00", "12:15", "12:30", "12:45",
+                               "13:00", "13:15", "13:30", "13:45",
+                               "14:00", "14:15", "14:30", "14:45",
+                               "15:00", "15:15", "15:30", "15:45",
+                               "16:00", "16:15", "16:30", "16:45",
+                               "17:00", "17:15", "17:30", "17:45",
+                               "18:00", "18:15", "18:30", "18:45",
+                               "19:00", "19:15", "19:30", "19:45",
+                               "20:00", "20:15", "20:30", "20:45",
+                               "21:00", "21:15", "21:30", "21:45",
+                               "22:00", "22:15", "22:30", "22:45",
+                               "23:00", "23:15", "23:30", "23:45"]
+                    required: ["day", "time"]
+                  - properties:
+                      type:         { enum: ['invoke dialog'] }
+                      dialog_name:  { type: string, title: "Dialog" }
+                    required:       [ "dialog_name" ]
+                  - properties:
+                      type:         { enum: ['invoke message'] }
+                      input:        { type: string, title: "Text from field" }
+                      message:      { type: string, title: "Manual message"}
+                  - properties:
+                      type:         { enum: ['calculate'] }
+                      operator:     { type: string, title: "Operator", enum: ["add", "multiply"] }
+                      calculated_field: { type: string, title: "to Field"}
+                      fields:
+                        type: array
+                        title: Accumulate
+                        items:
+                          type: string
+
+      required: ["dialog"]
+    definitions:
+      answer:
+        type: object
+        properties:
+          title:  { type: string, title: Answer }
+          value:  { type: string, title: Value }
+      condition:
+        type: object
+        properties:
+          field:  { type: string, title: "Field" }
+          eval:   { type: string, title: "Eval", enum: ['is','is not', 'is nil', 'is not nil', 'like', '>', '<', '>=', '<='] }
+          value:  { type: string, title: "Value" }
+  ui_schema:
+    classNames: "collapsible-array--field"
+    items:
+      ui:field: collapsible_array
+      ui:options:
+        caption_template: '<b>{{dialog}}</b> <span class=right></span>'
+      ui:layout:
+      - dialog:      { sm: 4 }
+      - steps:       { sm: 12 }
+      ui:order: ["dialog", "*"]
+      steps:
+        items:
+          id:
+            ui:field: auto_uuid
+          ui:field: collapsible_array
+          ui:options:
+            caption_template: >
+              {{type}} <b>{{output}}{{calculated_field}}{{input}}{{text}}{{tag}}{{event}}{{subject}}{{dialog_name}}{{message}}{{message_from}}{{day}} {{time}}</b><span class=right> {{#conditions}}<b>{{field}}</b> {{eval}} <b>{{value}}</b> {{/conditions}}</span>
+          ui:order: ["id", "type", "question", "output", "operator", "answers", "text", "alternatives", "image_url", "event", "payload", "tag", "to_user", "recipients", "subject", "body", "day", "time", "dialog_name", "input", "message", "message_from", "fields", "*"]
+          ui:layout:
+          - id:               { sm: 12 }
+          - type:             { sm: 12 }
+          - conditions:       { sm: 12 }
+          - text:             { sm: 11 }
+          - question:         { sm: 8 }
+            output:           { sm: 4 }
+          - calculated_field: { sm: 6 }
+            operator:         { sm: 6 }
+          - alternatives:     { sm: 12 }
+          - answers:          { sm: 12 }
+          - image_url:        { sm: 12 }
+          - event:            { sm: 6 }
+            payload:          { sm: 6 }
+          - tag:              { sm: 6 }
+          - to_user:          { sm: 3 }
+            recipients:       { sm: 9 }
+          - subject:          { sm: 12 }
+          - body:             { sm: 12 }
+          - day:              { sm: 6 }
+            time:             { sm: 6 }
+          - dialog_name:      { sm: 6 }
+          - input:            { sm: 6 }
+            message:          { sm: 6 }
+          - fields:           { sm: 12 }
+          conditions:
+            items:
+              ui:field: collapsible_array
+              ui:options:
+                caption_template: '<b>{{field}}</b> {{eval}} <b>{{value}}</b>'
+              ui:layout:
+              - field:        { sm: 4 }
+                eval:         { sm: 3 }
+                value:        { sm: 5 }
+              ui:order: ["field", "eval", "value"]
+          answers:
+            items:
+              ui:field: collapsible_array
+              ui:options:
+                caption_template: '<b>{{title}}</b>  <span class=right>{{value}}</span>'
+              ui:layout:
+              - title:        { sm: 9 }
+                value:        { sm: 3 }
+              ui:order: ["title", "*"]
+              title:
+                ui:field: i18n
+          question:
+            ui:widget: textarea
+            ui:options: { rows: 2, width: "100%" }
+            ui:field: i18n
+          text:
+            ui:widget: textarea
+            ui:options: { rows: 2, width: "100%" }
+            ui:field: i18n
+          alternatives:
+            items:
+              ui:field: i18n
+          image_url:
+            ui:widget: image
+            ui:field: i18n
+          body:
+            ui:widget: textarea
+            ui:options: { rows: 10, width: "100%" }
+            ui:field: i18n
+          subject:
+            ui:field: i18n
+          body:
+            ui:field: i18n
+          message:
+            ui:field: i18n
+          preview:
+            ui:field: preview_button
+          # preview:
+          #   ui:field: preview_button

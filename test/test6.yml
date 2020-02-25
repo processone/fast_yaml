@@ -1,0 +1,20 @@
+ints:
+- 1
+- 2
+- 3
+value: true
+---
+true: true
+false: false
+str: '123'
+str2: "123"
+int: 123
+null: null
+null2:
+null3: ~
+---
+inbox:
+  enabled: true
+  filters:
+    - icon: inbox
+      label: Inbox
