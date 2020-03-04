@@ -29,3 +29,15 @@ jobs:
       run: rebar3 compile xref
     - name: Run tests
       run: rebar3 eunit
+    - name: Tests failed notif
+      if: failure()  
+      id: test_fail_notif
+      uses: processone/xmpp-notifier@master
+      with:
+        jid: ${{ secrets.bot_username }}
+        password: ${{ secrets.bot_password }}
+        server_host: ${{ secrets.server_host }}
+        recipient: ${{ secrets.recipient }}
+        message: |
+          tests for the following PR have failed : ${{ github.event.pull_request.html_url }}
+        recipient_is_room: true
