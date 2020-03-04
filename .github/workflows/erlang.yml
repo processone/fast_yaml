@@ -30,7 +30,7 @@ jobs:
     - name: Run tests
       run: rebar3 eunit
     - name: Tests failed notif
-      # if: failure()  
+      if: failure()  
       id: test_fail_notif
       uses: processone/xmpp-notifier@master
       with:
@@ -38,8 +38,6 @@ jobs:
         password: ${{ secrets.bot_password }}
         server_host: ${{ secrets.server_host }}
         recipient: ${{ secrets.recipient }}
-        #message: |
-        #  tests for the following PR have failed : ${{ github.event.pull_request.html_url }}
         message: |
-           Successfull notification test for fast_yaml for Github bot
+          fast_yaml tests have failed: ${{ github.event.pull_request.html_url }} (Erlang version: ${{ matrix.erlang }})
         recipient_is_room: true
