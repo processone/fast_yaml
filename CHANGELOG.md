@@ -1,3 +1,7 @@
+# Version 1.0.24
+
+* Use github actions for build/test
+
 # Version 1.0.23
 
 * Updating p1_utils to version 1.0.18.
