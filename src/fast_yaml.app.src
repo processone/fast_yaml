@@ -30,7 +30,7 @@
   {mod,          {fast_yaml_app,[]}},
 
   %% hex.pm packaging:
-  {files, ["src/", "c_src/fast_yaml.c", "include/", "rebar.config", "rebar.config.script", "README.md", "LICENSE.txt"]},
+  {files, ["src/", "c_src/fast_yaml.c", "include/", "configure", "rebar.config", "rebar.config.script", "vars.config.in", "README.md", "LICENSE.txt"]},
   {licenses, ["Apache 2.0"]},
   {links, [{"Github", "https://github.com/processone/fast_yaml"}]}]}.
 
