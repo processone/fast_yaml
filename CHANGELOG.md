@@ -1,3 +1,7 @@
+# Version 1.0.29
+
+* Updating p1_utils to version 1.0.21.
+
 # Version 1.0.28
 
 * Fix hex to support compiling ejabberd with rebar3
