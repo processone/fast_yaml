@@ -31,7 +31,9 @@
 -export([decode/1, decode/2, start/0, stop/0,
          decode_from_file/1, decode_from_file/2, encode/1, format_error/1]).
 
--type option() :: {plain_as_atom, boolean()} | plain_as_atom | {sane_scalars, boolean()} | sane_scalars.
+-type option() :: {plain_as_atom, boolean()} | plain_as_atom |
+                  {sane_scalars, boolean()} | sane_scalars |
+                  {maps, boolean()} | maps.
 -type options() :: [option()].
 -type parser_error() :: {parser_error, binary(), integer(), integer()}.
 -type scanner_error() :: {scanner_error, binary(), integer(), integer()}.
