@@ -23,7 +23,7 @@
 
 {application, fast_yaml,
  [{description,  "Fast YAML native library for Erlang / Elixir"},
-  {vsn,          "1.0.29"},
+  {vsn,          "1.0.30"},
   {modules,      []},
   {registered,   []},
   {applications, [p1_utils, kernel, stdlib]},
