@@ -1,3 +1,7 @@
+# Version 1.0.30
+
+* Fix problems reported by dialyzer
+
 # Version 1.0.29
 
 * Updating p1_utils to version 1.0.21.
