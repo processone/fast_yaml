@@ -118,6 +118,8 @@ encode(Term) ->
             T
     end.
 
+encode(Terms, N) when is_map(Terms) ->
+    encode(maps:to_list(Terms), N);
 encode([{_, _}|_] = Terms, N) ->
     [[io_lib:nl(), indent(N), encode_pair(T, N)] || T <- Terms];
 encode([_|_] = Terms, N) ->
@@ -344,6 +346,11 @@ encode_test1_test() ->
     ?assertEqual(
        list_to_binary(encode(<<"a">>)),
        <<"\"a\"">>).
+
+encode_map1_test() ->
+    ?assertEqual(
+       list_to_binary(encode(#{<<"key">> => <<"value">>})),
+       <<"\"key\": \"value\"">>).
 
 encode_unicode_test1_test() ->
     ?assertEqual(
