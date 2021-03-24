@@ -1,3 +1,8 @@
+# Version 1.0.31
+
+* Updating p1_utils to version 1.0.22.
+* Encode maps
+
 # Version 1.0.30
 
 * Fix problems reported by dialyzer
