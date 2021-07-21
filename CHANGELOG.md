@@ -1,5 +1,6 @@
 # Version 1.0.32
 
+* Updating p1_utils to version 1.0.23.
 * Switch from using Travis to Github Actions as CI
 * Fix compatiblity with OTP24
 
