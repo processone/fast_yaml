@@ -12,6 +12,11 @@ jobs:
       - name: Check out
         uses: actions/checkout@v2
 
+      - name: Prepare libraries
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install libyaml-dev
+
       - name: Setup rebar3 hex
         run: |
           mkdir -p ~/.config/rebar3/
