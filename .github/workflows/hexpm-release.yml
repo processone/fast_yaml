@@ -28,6 +28,7 @@ jobs:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
 
       - uses: actions/upload-artifact@v2
+        if: failure()
         with:
           name: rebar-files
           path: rebar*
