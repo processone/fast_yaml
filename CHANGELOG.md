@@ -1,3 +1,7 @@
+# Version 1.0.33
+
+* Fix document generation in hex packages
+
 # Version 1.0.32
 
 * Updating p1_utils to version 1.0.23.
