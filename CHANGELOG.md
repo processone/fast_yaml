@@ -1,5 +1,6 @@
 # Version 1.0.33
 
+* Fix order in which dependencies are started
 * Fix document generation in hex packages
 
 # Version 1.0.32
