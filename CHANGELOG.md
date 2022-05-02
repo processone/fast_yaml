@@ -1,5 +1,6 @@
 # Version 1.0.33
 
+* Updating p1_utils to version 1.0.25.
 * Fix order in which dependencies are started
 * Fix document generation in hex packages
 
