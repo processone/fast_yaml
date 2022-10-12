@@ -1,3 +1,7 @@
+# Version 1.0.34
+
+* Support linking on Windows
+
 # Version 1.0.33
 
 * Updating p1_utils to version 1.0.25.
