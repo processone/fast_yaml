@@ -1,3 +1,7 @@
+# Version 1.0.35
+
+* build: append BSD library and include paths
+
 # Version 1.0.34
 
 * Support linking on Windows
