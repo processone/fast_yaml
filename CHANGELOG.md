@@ -1,3 +1,7 @@
+# Version 1.0.37
+
+* Updating p1_utils to version 1.0.26.
+
 # Version 1.0.35
 
 * build: append BSD library and include paths
