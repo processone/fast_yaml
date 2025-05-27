@@ -7,15 +7,17 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
+    container:
+      image: public.ecr.aws/docker/library/erlang
     steps:
       - name: Check out
         uses: actions/checkout@v2
 
       - name: Prepare libraries
         run: |
-          sudo apt-get -qq update
-          sudo apt-get -qq install libyaml-dev
+          apt-get -qq update
+          apt-get -qq install libyaml-dev
 
       - name: Setup rebar3 hex
         run: |

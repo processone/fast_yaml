@@ -9,10 +9,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        otp: ['19.3', '21.3', 24]
-    runs-on: ubuntu-20.04
+        otp: ['20', '25', '26', '27', '28']
+    runs-on: ubuntu-24.04
     container:
-      image: erlang:${{ matrix.otp }}
+      image: public.ecr.aws/docker/library/erlang:${{ matrix.otp }}
     steps:
     - uses: actions/checkout@v2
     - run: ./configure
@@ -25,13 +25,15 @@ jobs:
   cover:
     name: Cover
     needs: [tests]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
+    container:
+      image: public.ecr.aws/docker/library/erlang
     steps:
     - uses: actions/checkout@v2
     - name: Prepare libraries
       run: |
-        sudo apt-get -qq update
-        sudo apt-get -qq install libyaml-dev
+        apt-get -qq update
+        apt-get -qq install libyaml-dev
     - run: ./configure --enable-gcov
     - run: rebar3 compile
     - name: Run tests to obtain Erlang coverage
@@ -44,12 +46,13 @@ jobs:
         mv unload_test.erl test/
         rebar3 eunit -v
         mv eunit.coverdata _build/test/cover/
-    - run: pip install --user cpp-coveralls
-    - run: cpp-coveralls -b `pwd` --verbose --gcov-options '\-lp' --dump c.json
     - name: Send to Coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        apt-get -qq install pipx
+        pipx install cpp-coveralls
+        /github/home/.local/bin/cpp-coveralls -b `pwd` --verbose --gcov-options '\-lp' --dump c.json
         ADDJSONFILE=c.json COVERALLS=true rebar3 as test coveralls send
         curl -v -k https://coveralls.io/webhook \
              --header "Content-Type: application/json" \
