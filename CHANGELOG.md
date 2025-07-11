@@ -1,5 +1,6 @@
 # Version 1.0.39
 
+* Updating p1_utils to version 1.0.28.
 * Update CI containers
 
 # Version 1.0.38
